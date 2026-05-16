@@ -192,7 +192,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
     </div>
   </div>
 </div>
- 
+
 <!-- APP HEADER -->
 <header class="site-header" id="mainApp" style="display:none">
   <div class="hdr-top">
@@ -210,7 +210,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
     <div class="nav-item" id="navAdmin" style="display:none" onclick="showPage('Admin')">Admin</div>
   </nav>
 </header>
- 
+
 <div class="container" id="appCont" style="display:none">
   <!-- MARKET -->
   <div id="pageMarket">
@@ -251,7 +251,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
       </div>
     </div>
   </div>
- 
+
   <!-- BONUS -->
   <div id="pageBonus" style="display:none">
     <div class="page-title-bar"><h1>Thưởng chỉ số sau trận đấu</h1><span class="pbadge">Live</span></div>
@@ -265,7 +265,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
       </div>
     </div>
   </div>
- 
+
   <!-- ADMIN -->
   <div id="pageAdmin" style="display:none">
     <div class="page-title-bar" style="background:#7d1b1b"><h1>Bảng điều khiển Admin</h1><span class="pbadge" style="background:#ff6b6b;color:#fff">SUPER ADMIN</span></div>
@@ -312,7 +312,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
     </div>
   </div>
 </div>
- 
+
 <!-- EDIT MODAL -->
 <div class="modal-ov" id="modalOv">
   <div class="modal">
@@ -342,12 +342,12 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
   </div>
 </div>
 <div class="toast" id="toast"></div>
- 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 // simple hash
 function h(s){let v=0;for(let i=0;i<s.length;i++){v=((v<<5)-v)+s.charCodeAt(i);v|=0}return v.toString(36)}
- 
+
 const BONUSES=[
   {id:'vdich',   lbl:'Vô địch',                tag:'+20',  type:'val', amt:20,  cls:'',       desc:'Đội vô địch giải đấu — mỗi cầu thủ +20'},
   {id:'vuabt',   lbl:'Vua bàn thắng',          tag:'+50',  type:'val', amt:50,  cls:'special',desc:'Cầu thủ ghi nhiều bàn nhất +50'},
@@ -357,7 +357,7 @@ const BONUSES=[
   {id:'puskas',  lbl:'Puskas',                 tag:'+20',  type:'val', amt:20,  cls:'special',desc:'Bàn thắng đẹp nhất +20'},
   {id:'hvtm',    lbl:'HV Thủ môn',             tag:'+20',  type:'gk',  amt:20,  cls:'gk',     desc:'Thủ môn cộng +20 mỗi lần tăng chỉ số tổng'},
 ];
- 
+
 const INIT=[
   {id:1, stt:1, so:'09',ten:'TDũng',  doi:'FC Mobile',  rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
   {id:2, stt:2, so:'07',ten:'BKhang', doi:'FC Mobile',  rating:3,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
@@ -387,21 +387,21 @@ const INIT=[
   {id:25,stt:25,so:'',  ten:'KMinh1', doi:'FC Sĩ Gái',  rating:3,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
   {id:26,stt:26,so:'',  ten:'ĐMinh',  doi:'FC Sĩ Gái',  rating:1,val:50,  idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
 ];
- 
+
 const ADMIN_H=h('hanhnguyen110312');
 const TC={'FC Mobile':'#185FA5','FC Bựa Dâm':'#27ae60','FC Sĩ Gái':'#8e44ad'};
 const TL={'FC Mobile':'#d6eaf8','FC Bựa Dâm':'#d5f5e3','FC Sĩ Gái':'#e8daef'};
 const TD={'FC Mobile':'#0c3460','FC Bựa Dâm':'#1e8449','FC Sĩ Gái':'#6c3483'};
- 
+
 // version reset
 const VER='v5';
 if(localStorage.getItem('tmV')!==VER){localStorage.removeItem('tmD');localStorage.removeItem('tmBL');localStorage.setItem('tmV',VER)}
- 
+
 let DATA=JSON.parse(localStorage.getItem('tmD')||JSON.stringify(INIT));
 let BL=JSON.parse(localStorage.getItem('tmBL')||'[]');
 let USERS=initUsers();
 let CU=null, cF='all', cS='val', eId=null, c1=null, c2=null;
- 
+
 function initUsers(){
   let us=JSON.parse(localStorage.getItem('tmU')||'[]');
   if(!us.find(u=>u.un==='vquyetthang'))us.push({un:'vquyetthang',h:ADMIN_H,role:'admin',ok:true,ep:[]});
@@ -409,7 +409,7 @@ function initUsers(){
   return us;
 }
 function sd(){localStorage.setItem('tmD',JSON.stringify(DATA));localStorage.setItem('tmU',JSON.stringify(USERS));localStorage.setItem('tmBL',JSON.stringify(BL))}
- 
+
 function stars(r){let s='';for(let i=0;i<r;i++)s+='★';for(let i=r;i<5;i++)s+='☆';return s}
 function ini(n){return n.substring(0,2).toUpperCase()}
 function itot(idx){return(idx.toc||0)+(idx.suc||0)+(idx.ky||0)+(idx.tong||0)}
@@ -421,7 +421,7 @@ function idxB(p){
 function sq(s){return '<span style="display:inline-block;width:'+s+'px;height:'+s+'px;background:currentColor;vertical-align:middle;margin-left:1px"></span>'}
 function toast(msg,t=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800)}
 function canE(){return CU&&(CU.role==='admin'||CU.role==='member')}
- 
+
 // AUTH
 function switchTab(tab){
   document.querySelectorAll('.auth-tab').forEach((b,i)=>b.classList[i===(tab==='login'?0:1)?'add':'remove']('active'));
@@ -471,7 +471,7 @@ function enterApp(){
   document.getElementById('navAdmin').style.display=CU.role==='admin'?'block':'none';
   showPage('Market');
 }
- 
+
 // PAGES
 function showPage(p){
   ['Market','Bonus','Admin'].forEach(x=>document.getElementById('page'+x).style.display='none');
@@ -483,7 +483,7 @@ function showPage(p){
   if(p==='Bonus'){rBonus()}
   if(p==='Admin'){rAdmin()}
 }
- 
+
 // MARKET
 function getF(){
   let d=cF==='all'?[...DATA]:DATA.filter(p=>p.doi===cF);
@@ -569,7 +569,7 @@ function rCharts(){
   if(c2)c2.destroy();
   c2=new Chart(document.getElementById('c2'),{type:'bar',data:{labels:sorted.map(p=>p.ten),datasets:[{data:sorted.map(p=>p.val),backgroundColor:sorted.map(p=>TC[p.doi]+'99'),borderColor:sorted.map(p=>TC[p.doi]),borderWidth:1,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45,autoSkip:false}},y:{ticks:{callback:v=>v.toLocaleString()+' ▪',font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}}}}});
 }
- 
+
 // BONUS
 function rBonus(){
   const ok=canE();
@@ -599,7 +599,7 @@ function rBH(){
   const el=document.getElementById('bonusHist');
   el.innerHTML=BL.length?BL.slice(0,20).map(x=>'<div class="hist-item"><span><b>'+x.pl+'</b> — '+x.bn+'</span><span style="color:#aaa;font-size:10px">'+x.t+' · '+x.by+'</span></div>').join(''):'<div style="font-size:12px;color:#aaa;text-align:center;padding:10px">Chưa có lịch sử</div>';
 }
- 
+
 // ADMIN
 function rAdmin(){
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
