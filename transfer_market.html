@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transfer Market — Marusys FC</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --tm-green: #1a5276;
+  --tm-green-light: #1f618d;
+  --tm-accent: #e8a317;
+  --tm-accent2: #c0392b;
+  --tm-bg: #f4f4f4;
+  --tm-card: #ffffff;
+  --tm-border: #ddd;
+  --tm-text: #1a1a2e;
+  --tm-muted: #666;
+  --tm-header-bg: #0d2137;
+  --mobile: #185FA5;
+  --bua: #27ae60;
+  --gai: #8e44ad;
+  --mobile-l: #d6eaf8;
+  --bua-l: #d5f5e3;
+  --gai-l: #e8daef;
+  --mobile-d: #0c3460;
+  --bua-d: #1e8449;
+  --gai-d: #6c3483;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Source Sans 3', sans-serif;
+  background: var(--tm-bg);
+  color: var(--tm-text);
+  min-height: 100vh;
+}
+
+/* HEADER */
+.site-header {
+  background: var(--tm-header-bg);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.logo {
+  font-family: 'Oswald', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--tm-accent);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.logo span { color: #fff; }
+.header-nav {
+  display: flex;
+  gap: 0;
+  padding: 0 20px;
+}
+.nav-item {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all .2s;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.nav-item.active, .nav-item:hover { color: var(--tm-accent); border-bottom-color: var(--tm-accent); }
+
+/* MAIN LAYOUT */
+.container { max-width: 1100px; margin: 0 auto; padding: 20px 16px; }
+
+/* PAGE TITLE BAR */
+.page-title-bar {
+  background: var(--tm-green);
+  color: #fff;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  border-radius: 3px;
+}
+.page-title-bar h1 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: .5px;
+}
+.page-title-bar .badge {
+  background: var(--tm-accent);
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+/* SUMMARY STATS */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-box {
+  background: var(--tm-card);
+  border: 1px solid var(--tm-border);
+  border-top: 3px solid var(--tm-green);
+  padding: 12px 14px;
+  border-radius: 2px;
+}
+.stat-box.mobile { border-top-color: var(--mobile); }
+.stat-box.bua { border-top-color: var(--bua); }
+.stat-box.gai { border-top-color: var(--gai); }
+.stat-lbl { font-size: 11px; color: var(--tm-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.stat-val { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 600; color: var(--tm-text); }
+.stat-sub { font-size: 11px; color: var(--tm-muted); margin-top: 2px; }
+
+/* FILTER BAR */
+.filter-bar {
+  background: var(--tm-card);
+  border: 1px solid var(--tm-border);
+  padding: 10px 14px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 12px;
+  border-radius: 2px;
+}
+.filter-btn {
+  font-size: 12px;
+  padding: 5px 12px;
+  border: 1px solid var(--tm-border);
+  background: transparent;
+  cursor: pointer;
+  border-radius: 2px;
+  font-family: 'Source Sans 3', sans-serif;
+  color: var(--tm-muted);
+  transition: all .15s;
+  font-weight: 500;
+}
+.filter-btn:hover { background: #f0f0f0; }
+.filter-btn.active { background: var(--tm-green); color: #fff; border-color: var(--tm-green); }
+.filter-btn.mobile.active { background: var(--mobile); border-color: var(--mobile); }
+.filter-btn.bua.active { background: var(--bua); border-color: var(--bua); }
+.filter-btn.gai.active { background: var(--gai); border-color: var(--gai); }
+.filter-sep { width: 1px; height: 24px; background: var(--tm-border); margin: 0 4px; }
+.sort-label { font-size: 11px; color: var(--tm-muted); text-transform: uppercase; letter-spacing: .5px; }
+
+/* TABLE */
+.tm-table-wrap {
+  background: var(--tm-card);
+  border: 1px solid var(--tm-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.tm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.tm-table thead tr {
+  background: var(--tm-green);
+  color: #fff;
+}
+.tm-table th {
+  padding: 10px 10px;
+  text-align: left;
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .5px;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+.tm-table th:hover { background: var(--tm-green-light); }
+.tm-table th:last-child { border-right: none; }
+.tm-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+.tm-table tbody tr:hover { background: #f8f9fa; }
+.tm-table tbody tr:last-child td { border-bottom: none; }
+.tm-table tbody tr.highlight-row { background: #fffbf0; }
+
+/* Row elements */
+.rank-cell { font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 600; color: var(--tm-muted); width: 36px; text-align: center; }
+.rank-cell.top1 { color: #d4af37; }
+.rank-cell.top2 { color: #9e9e9e; }
+.rank-cell.top3 { color: #cd7f32; }
+
+.player-cell { display: flex; align-items: center; gap: 10px; }
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 600;
+  flex-shrink: 0;
+  border: 2px solid;
+}
+.player-name { font-weight: 600; font-size: 13px; color: var(--tm-text); }
+.player-so { font-size: 11px; color: var(--tm-muted); }
+
+.team-badge {
+  font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 2px;
+  text-transform: uppercase; letter-spacing: .5px;
+  white-space: nowrap;
+}
+
+.stars-cell { color: #e8a317; font-size: 13px; letter-spacing: 1px; }
+
+.val-cell {
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px; font-weight: 600;
+  white-space: nowrap;
+}
+
+.trend-up { color: #27ae60; font-weight: 600; font-size: 12px; }
+.trend-down { color: #c0392b; font-weight: 600; font-size: 12px; }
+.trend-neu { color: var(--tm-muted); font-size: 12px; }
+
+.bar-cell { min-width: 80px; }
+.bar-bg { background: #eee; border-radius: 2px; height: 6px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 2px; transition: width .4s; }
+
+/* INPUT CELL */
+.val-input {
+  width: 85px;
+  padding: 4px 6px;
+  border: 1px solid var(--tm-border);
+  border-radius: 2px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tm-text);
+  background: #fff;
+  transition: border-color .2s;
+  text-align: right;
+}
+.val-input:focus { outline: none; border-color: var(--tm-green); box-shadow: 0 0 0 2px rgba(26,82,118,0.12); }
+.val-input.changed { border-color: var(--tm-accent); background: #fffbf0; }
+
+.rating-sel {
+  padding: 4px 6px;
+  border: 1px solid var(--tm-border);
+  border-radius: 2px;
+  font-size: 12px;
+  background: #fff;
+  color: var(--tm-text);
+  cursor: pointer;
+}
+.rating-sel:focus { outline: none; border-color: var(--tm-green); }
+
+/* MODAL / EDIT PANEL */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 460px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: slideIn .2s ease;
+}
+@keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-header {
+  background: var(--tm-header-bg);
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-title { font-family: 'Oswald', sans-serif; font-size: 17px; color: #fff; font-weight: 600; }
+.modal-close { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px; }
+.modal-close:hover { color: #fff; }
+.modal-body { padding: 20px 18px; }
+.modal-player-info {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px;
+  background: #f8f9fa;
+  border: 1px solid var(--tm-border);
+  border-radius: 3px;
+  margin-bottom: 18px;
+}
+.modal-avatar {
+  width: 50px; height: 50px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 700;
+  border: 3px solid;
+  flex-shrink: 0;
+}
+.modal-pname { font-weight: 600; font-size: 16px; }
+.modal-pmeta { font-size: 12px; color: var(--tm-muted); margin-top: 2px; }
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--tm-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; display: block; }
+.form-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--tm-border);
+  border-radius: 3px;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 14px;
+  color: var(--tm-text);
+  transition: border-color .2s;
+}
+.form-input:focus { outline: none; border-color: var(--tm-green); box-shadow: 0 0 0 3px rgba(26,82,118,0.1); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-hint { font-size: 11px; color: var(--tm-muted); margin-top: 4px; }
+.modal-footer { padding: 14px 18px; border-top: 1px solid var(--tm-border); display: flex; gap: 8px; justify-content: flex-end; }
+.btn-save {
+  background: var(--tm-green); color: #fff;
+  border: none; padding: 9px 22px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px; font-weight: 500;
+  border-radius: 2px; cursor: pointer;
+  letter-spacing: .5px; transition: background .15s;
+}
+.btn-save:hover { background: var(--tm-green-light); }
+.btn-cancel {
+  background: none; color: var(--tm-muted);
+  border: 1px solid var(--tm-border); padding: 9px 18px;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 14px; border-radius: 2px; cursor: pointer;
+  transition: all .15s;
+}
+.btn-cancel:hover { background: #f0f0f0; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: #1a5276; color: #fff;
+  padding: 12px 20px; border-radius: 4px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 300;
+  transform: translateY(100px); opacity: 0;
+  transition: all .3s cubic-bezier(.175,.885,.32,1.1);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: #27ae60; }
+
+/* EDIT BTN */
+.edit-btn {
+  background: none;
+  border: 1px solid var(--tm-border);
+  padding: 4px 8px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--tm-muted);
+  transition: all .15s;
+  font-family: 'Source Sans 3', sans-serif;
+}
+.edit-btn:hover { background: var(--tm-green); color: #fff; border-color: var(--tm-green); }
+
+/* SECTION HEADER */
+.section-bar {
+  background: #1a2e40;
+  color: #fff;
+  padding: 7px 12px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-bar .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* CHART */
+.chart-section {
+  background: var(--tm-card);
+  border: 1px solid var(--tm-border);
+  border-radius: 2px;
+  margin-top: 16px;
+  overflow: hidden;
+}
+.chart-header {
+  background: var(--tm-green);
+  color: #fff;
+  padding: 9px 14px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .5px;
+}
+.chart-body { padding: 16px; }
+.chart-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; font-size: 12px; color: var(--tm-muted); }
+.chart-legend span { display: flex; align-items: center; gap: 5px; }
+.chart-legend b { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+
+/* RESPONSIVE */
+@media (max-width: 700px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .tm-table th:nth-child(n+6), .tm-table td:nth-child(n+6) { display: none; }
+}
+
+/* Index badge */
+.idx-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+.idx-up { background: #d5f5e3; color: #1e8449; }
+.idx-down { background: #fadbd8; color: #922b21; }
+.idx-neu { background: #f0f0f0; color: #666; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-top">
+    <div class="logo">Transfer<span>Market</span></div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-left:8px">Marusys FC Edition</div>
+    <div style="margin-left:auto;font-size:12px;color:rgba(255,255,255,0.5)" id="lastSaved"></div>
+  </div>
+  <nav class="header-nav">
+    <div class="nav-item active">Danh sách cầu thủ</div>
+    <div class="nav-item" onclick="scrollToChart()">Thống kê</div>
+  </nav>
+</header>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- PAGE TITLE -->
+  <div class="page-title-bar">
+    <h1>Thị trường chuyển nhượng</h1>
+    <span class="badge">Mùa 2025/26</span>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn-cancel" onclick="exportData()" style="font-size:12px;padding:5px 12px">Xuất dữ liệu</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row" id="statsRow"></div>
+
+  <!-- FILTERS -->
+  <div class="filter-bar">
+    <span class="sort-label">Đội:</span>
+    <button class="filter-btn active" onclick="setFilter('all',this)">Tất cả (27)</button>
+    <button class="filter-btn mobile" onclick="setFilter('FC Mobile',this)">FC Mobile</button>
+    <button class="filter-btn bua" onclick="setFilter('FC Bựa Dâm',this)">FC Bựa Dâm</button>
+    <button class="filter-btn gai" onclick="setFilter('FC Sĩ Gái',this)">FC Sĩ Gái</button>
+    <div class="filter-sep"></div>
+    <span class="sort-label">Sắp xếp:</span>
+    <button class="filter-btn active" id="sortVal" onclick="setSort('val',this)">↓ Giá trị</button>
+    <button class="filter-btn" id="sortRating" onclick="setSort('rating',this)">↓ Đánh giá</button>
+    <button class="filter-btn" id="sortStt" onclick="setSort('stt',this)">↑ STT</button>
+    <button class="filter-btn" id="sortIdx" onclick="setSort('idx',this)">↓ Tăng chỉ số</button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="tm-table-wrap">
+    <div class="section-bar" id="sectionBar">
+      <span class="dot" style="background:var(--tm-accent)"></span>
+      <span>Tất cả cầu thủ — 27 người</span>
+    </div>
+    <table class="tm-table">
+      <thead>
+        <tr>
+          <th onclick="setSort('stt',null)" title="Số thứ tự">#</th>
+          <th>Cầu thủ</th>
+          <th>Đội</th>
+          <th onclick="setSort('rating',null)">Đánh giá ▾</th>
+          <th onclick="setSort('val',null)">Giá trị ▾</th>
+          <th>Nhập giá trị</th>
+          <th onclick="setSort('idx',null)">Tăng chỉ số ▾</th>
+          <th>Phân bổ</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- CHART -->
+  <div class="chart-section" id="chartSection">
+    <div class="chart-header">Thống kê giá trị chuyển nhượng</div>
+    <div class="chart-body">
+      <div class="chart-legend" id="chartLegend"></div>
+      <div style="position:relative;width:100%;height:220px;margin-bottom:20px">
+        <canvas id="c1" role="img" aria-label="Tổng giá trị 3 đội bóng">Biểu đồ tổng giá trị</canvas>
+      </div>
+      <div style="position:relative;width:100%;height:320px">
+        <canvas id="c2" role="img" aria-label="Giá trị từng cầu thủ">Biểu đồ từng cầu thủ</canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Chỉnh sửa cầu thủ</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-player-info">
+        <div class="modal-avatar" id="modalAvatar"></div>
+        <div>
+          <div class="modal-pname" id="modalName"></div>
+          <div class="modal-pmeta" id="modalMeta"></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Giá trị chuyển nhượng (đ)</label>
+          <input type="number" class="form-input" id="inputVal" placeholder="vd: 350">
+          <div class="form-hint">Đơn vị: đồng (có thể nhập số lớn)</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Đánh giá vị trí</label>
+          <select class="form-input" id="inputRating">
+            <option value="1">1/5 — Yếu</option>
+            <option value="2">2/5 — Trung bình</option>
+            <option value="3">3/5 — Khá</option>
+            <option value="4">4/5 — Tốt</option>
+            <option value="5">5/5 — Xuất sắc</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tăng chỉ số (kỳ tới)</label>
+        <div class="form-row">
+          <div>
+            <input type="number" class="form-input" id="inputIdxToc" placeholder="Tốc độ ±" step="1">
+            <div class="form-hint">Tốc độ (±)</div>
+          </div>
+          <div>
+            <input type="number" class="form-input" id="inputIdxSuc" placeholder="Sức mạnh ±" step="1">
+            <div class="form-hint">Sức mạnh (±)</div>
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:8px">
+          <div>
+            <input type="number" class="form-input" id="inputIdxKy" placeholder="Kỹ thuật ±" step="1">
+            <div class="form-hint">Kỹ thuật (±)</div>
+          </div>
+          <div>
+            <input type="number" class="form-input" id="inputIdxTong" placeholder="Tổng ±" step="1">
+            <div class="form-hint">Chỉ số tổng (±)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Huỷ</button>
+      <button class="btn-save" onclick="saveModal()">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const TC = { 'FC Mobile': '#185FA5', 'FC Bựa Dâm': '#27ae60', 'FC Sĩ Gái': '#8e44ad' };
+const TL = { 'FC Mobile': '#d6eaf8', 'FC Bựa Dâm': '#d5f5e3', 'FC Sĩ Gái': '#e8daef' };
+const TD = { 'FC Mobile': '#0c3460', 'FC Bựa Dâm': '#1e8449', 'FC Sĩ Gái': '#6c3483' };
+const TEAM_SHORT = { 'FC Mobile': 'MOB', 'FC Bựa Dâm': 'BUA', 'FC Sĩ Gái': 'SGI' };
+
+const INIT = [
+  {id:1, stt:1, so:'09', ten:'TDũng', doi:'FC Mobile', rating:2, val:100, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:2, stt:2, so:'07', ten:'BKhang', doi:'FC Mobile', rating:3, val:150, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:3, stt:3, so:'06', ten:'NPhong', doi:'FC Mobile', rating:4, val:350, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:4, stt:4, so:'90', ten:'AQuân', doi:'FC Mobile', rating:4, val:150, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:5, stt:5, so:'25', ten:'ĐQuang', doi:'FC Mobile', rating:4, val:350, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:6, stt:6, so:'01', ten:'NMinh', doi:'FC Mobile', rating:2, val:100, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:7, stt:7, so:'12', ten:'GBách', doi:'FC Mobile', rating:1, val:50, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:8, stt:8, so:'02', ten:'MKhang', doi:'FC Mobile', rating:2, val:75, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:27, stt:27, so:'—', ten:'QThắng', doi:'FC Mobile', rating:4, val:500, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:9, stt:9, so:'06', ten:'TMinh', doi:'FC Bựa Dâm', rating:2, val:100, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:10, stt:10, so:'08', ten:'GHưng', doi:'FC Bựa Dâm', rating:4, val:400, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:11, stt:11, so:'3', ten:'QKhải', doi:'FC Bựa Dâm', rating:4, val:350, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:12, stt:12, so:'10', ten:'TKhang', doi:'FC Bựa Dâm', rating:3, val:300, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:13, stt:13, so:'23', ten:'Vanh', doi:'FC Bựa Dâm', rating:3, val:200, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:14, stt:14, so:'5', ten:'MHưng', doi:'FC Bựa Dâm', rating:2, val:100, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:15, stt:15, so:'1', ten:'Phiệp', doi:'FC Bựa Dâm', rating:3, val:150, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:16, stt:16, so:'9', ten:'ĐThắng', doi:'FC Bựa Dâm', rating:2, val:150, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:17, stt:17, so:'21', ten:'XPhúc', doi:'FC Bựa Dâm', rating:2, val:100, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:18, stt:18, so:'—', ten:'SLong', doi:'FC Sĩ Gái', rating:4, val:150, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:19, stt:19, so:'—', ten:'KNguyên', doi:'FC Sĩ Gái', rating:4, val:400, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:20, stt:20, so:'—', ten:'AĐức', doi:'FC Sĩ Gái', rating:3, val:325, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:21, stt:21, so:'—', ten:'MĐức', doi:'FC Sĩ Gái', rating:2, val:150, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:22, stt:22, so:'—', ten:'KMinh', doi:'FC Sĩ Gái', rating:3, val:325, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:23, stt:23, so:'—', ten:'GBảo', doi:'FC Sĩ Gái', rating:4, val:300, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:24, stt:24, so:'—', ten:'MQuang', doi:'FC Sĩ Gái', rating:5, val:350, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:25, stt:25, so:'—', ten:'KMinh1', doi:'FC Sĩ Gái', rating:3, val:100, idx:{toc:0,suc:0,ky:0,tong:0}},
+  {id:26, stt:26, so:'—', ten:'ĐMinh', doi:'FC Sĩ Gái', rating:1, val:50, idx:{toc:0,suc:0,ky:0,tong:0}},
+];
+
+const DATA_VERSION = 'v2';
+if (localStorage.getItem('tmVer') !== DATA_VERSION) {
+  localStorage.removeItem('tmData');
+  localStorage.setItem('tmVer', DATA_VERSION);
+}
+let DATA = JSON.parse(localStorage.getItem('tmData') || JSON.stringify(INIT));
+let curFilter = 'all', curSort = 'val', editId = null;
+let c1i = null, c2i = null;
+
+function save() {
+  localStorage.setItem('tmData', JSON.stringify(DATA));
+  localStorage.setItem('tmSaved', new Date().toLocaleString('vi-VN'));
+  document.getElementById('lastSaved').textContent = 'Đã lưu: ' + new Date().toLocaleTimeString('vi-VN');
+}
+
+function stars(r) {
+  let s = '';
+  for (let i = 0; i < r; i++) s += '★';
+  for (let i = r; i < 5; i++) s += '☆';
+  return s;
+}
+
+function initials(name) {
+  return name.substring(0, 2).toUpperCase();
+}
+
+function idxTotal(idx) {
+  return (idx.toc || 0) + (idx.suc || 0) + (idx.ky || 0) + (idx.tong || 0);
+}
+
+function idxBadge(p) {
+  const keys = ['toc','suc','ky','tong'];
+  const labels = ['Tốc','Sức','Kỹ','Tổng'];
+  const parts = keys.filter(k => p.idx[k] !== 0).map(k => {
+    const v = p.idx[k];
+    return `<span style="font-size:10px;color:${v>0?'#1e8449':v<0?'#922b21':'#666'}">${labels[keys.indexOf(k)]} ${v>0?'+':''}${v}</span>`;
+  });
+  if (parts.length === 0) return '<span style="font-size:11px;color:#aaa">—</span>';
+  return parts.join(' ');
+}
+
+function getFiltered() {
+  let d = curFilter === 'all' ? [...DATA] : DATA.filter(p => p.doi === curFilter);
+  if (curSort === 'val') d.sort((a,b) => b.val - a.val);
+  else if (curSort === 'rating') d.sort((a,b) => b.rating - a.rating);
+  else if (curSort === 'stt') d.sort((a,b) => a.stt - b.stt);
+  else if (curSort === 'idx') d.sort((a,b) => idxTotal(b.idx) - idxTotal(a.idx));
+  return d.map((p,i) => ({...p, rank: i+1}));
+}
+
+function renderStats() {
+  const teams = ['FC Mobile', 'FC Bựa Dâm', 'FC Sĩ Gái'];
+  const total = DATA.reduce((s,p) => s+p.val, 0);
+  let html = `<div class="stat-box"><div class="stat-lbl">Tổng giá trị</div><div class="stat-val">${total.toLocaleString()} <span style="font-size:12px;display:inline-block;width:11px;height:11px;background:currentColor;vertical-align:middle"></span></div><div class="stat-sub">27 cầu thủ</div></div>`;
+  const cls = ['mobile','bua','gai'];
+  teams.forEach((t,i) => {
+    const ps = DATA.filter(p=>p.doi===t);
+    const tv = ps.reduce((s,p)=>s+p.val,0);
+    html += `<div class="stat-box ${cls[i]}"><div class="stat-lbl">${t}</div><div class="stat-val" style="color:${TC[t]}">${tv.toLocaleString()} <span style="font-size:11px;display:inline-block;width:10px;height:10px;background:currentColor;vertical-align:middle"></span></div><div class="stat-sub">${ps.length} cầu thủ · TB ${Math.round(tv/ps.length).toLocaleString()} <span style="font-size:9px;display:inline-block;width:8px;height:8px;background:#666;vertical-align:middle"></span></div></div>`;
+  });
+  document.getElementById('statsRow').innerHTML = html;
+}
+
+function renderTable() {
+  const d = getFiltered();
+  const maxVal = Math.max(...d.map(p=>p.val));
+  const bar = document.getElementById('sectionBar');
+  const label = curFilter === 'all' ? `Tất cả cầu thủ — ${d.length} người` : `${curFilter} — ${d.length} cầu thủ`;
+  const dotColor = curFilter === 'all' ? '#e8a317' : TC[curFilter];
+  bar.innerHTML = `<span class="dot" style="background:${dotColor}"></span><span>${label}</span>`;
+
+  document.getElementById('tbody').innerHTML = d.map(p => {
+    const tc = TC[p.doi], tl = TL[p.doi], tdk = TD[p.doi];
+    const bw = Math.round((p.val/maxVal)*100);
+    const rk = p.rank <= 3 ? `top${p.rank}` : '';
+    const rankDisp = p.rank <= 3 ? ['🥇','🥈','🥉'][p.rank-1] : p.rank;
+    return `<tr id="row-${p.id}">
+      <td class="rank-cell ${rk}">${rankDisp}</td>
+      <td>
+        <div class="player-cell">
+          <div class="avatar" style="background:${tl};color:${tdk};border-color:${tc}">${initials(p.ten)}</div>
+          <div>
+            <div class="player-name">${p.ten}</div>
+            <div class="player-so">Số áo: ${p.so}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="team-badge" style="background:${tl};color:${tdk}">${p.doi.replace('FC ','')}</span></td>
+      <td><span class="stars-cell" title="${p.rating}/5">${stars(p.rating)}</span></td>
+      <td class="val-cell" style="color:${tc}">${p.val.toLocaleString()} <span style="font-size:10px;display:inline-block;width:9px;height:9px;background:currentColor;vertical-align:middle;margin-left:1px"></span></td>
+      <td>
+        <input type="number" class="val-input" id="vi-${p.id}" value="${p.val}"
+          onchange="quickSave(${p.id},this)"
+          oninput="this.classList.add('changed')"
+          title="Nhập giá trị mới">
+      </td>
+      <td>${idxBadge(p)}</td>
+      <td class="bar-cell">
+        <div class="bar-bg"><div class="bar-fill" style="width:${bw}%;background:${tc}"></div></div>
+      </td>
+      <td><button class="edit-btn" onclick="openModal(${p.id})">Sửa</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function quickSave(id, input) {
+  const v = parseInt(input.value) || 0;
+  const p = DATA.find(x=>x.id===id);
+  if (p) {
+    p.val = v;
+    save();
+    renderStats();
+    renderCharts();
+    input.classList.remove('changed');
+    showToast(`Đã lưu ${p.ten}: ${v.toLocaleString()} ▪`, 'success');
+  }
+}
+
+function setFilter(f, btn) {
+  curFilter = f;
+  document.querySelectorAll('.filter-bar .filter-btn').forEach(b => {
+    if (['Tất cả (27)','FC Mobile','FC Bựa Dâm','FC Sĩ Gái'].some(x => b.textContent.includes(x.replace('FC ',''))) || b.textContent.startsWith('Tất cả'))
+      b.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+  renderTable();
+}
+
+function setSort(s, btn) {
+  curSort = s;
+  ['sortVal','sortRating','sortStt','sortIdx'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  const map = {val:'sortVal',rating:'sortRating',stt:'sortStt',idx:'sortIdx'};
+  if (map[s]) document.getElementById(map[s])?.classList.add('active');
+  renderTable();
+}
+
+function openModal(id) {
+  editId = id;
+  const p = DATA.find(x=>x.id===id);
+  if (!p) return;
+  const tc = TC[p.doi], tl = TL[p.doi], tdk = TD[p.doi];
+  document.getElementById('modalTitle').textContent = `Chỉnh sửa — ${p.ten}`;
+  document.getElementById('modalName').textContent = p.ten;
+  document.getElementById('modalMeta').textContent = `${p.doi} · Số áo: ${p.so} · STT: ${p.stt}`;
+  const av = document.getElementById('modalAvatar');
+  av.textContent = initials(p.ten);
+  av.style.background = tl; av.style.color = tdk; av.style.borderColor = tc;
+  document.getElementById('inputVal').value = p.val;
+  document.getElementById('inputRating').value = p.rating;
+  document.getElementById('inputIdxToc').value = p.idx.toc || '';
+  document.getElementById('inputIdxSuc').value = p.idx.suc || '';
+  document.getElementById('inputIdxKy').value = p.idx.ky || '';
+  document.getElementById('inputIdxTong').value = p.idx.tong || '';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  editId = null;
+}
+
+function saveModal() {
+  const p = DATA.find(x=>x.id===editId);
+  if (!p) return;
+  p.val = parseInt(document.getElementById('inputVal').value) || p.val;
+  p.rating = parseInt(document.getElementById('inputRating').value) || p.rating;
+  p.idx.toc = parseInt(document.getElementById('inputIdxToc').value) || 0;
+  p.idx.suc = parseInt(document.getElementById('inputIdxSuc').value) || 0;
+  p.idx.ky = parseInt(document.getElementById('inputIdxKy').value) || 0;
+  p.idx.tong = parseInt(document.getElementById('inputIdxTong').value) || 0;
+  save();
+  renderStats();
+  renderTable();
+  renderCharts();
+  closeModal();
+  showToast(`Đã cập nhật ${p.ten}`, 'success');
+}
+
+function renderCharts() {
+  const teams = ['FC Mobile', 'FC Bựa Dâm', 'FC Sĩ Gái'];
+  const totals = teams.map(t => DATA.filter(p=>p.doi===t).reduce((s,p)=>s+p.val,0));
+  const colors = teams.map(t => TC[t]);
+
+  document.getElementById('chartLegend').innerHTML = teams.map((t,i) =>
+    `<span><b style="background:${colors[i]}"></b>${t}: ${totals[i].toLocaleString()} ▪</span>`
+  ).join('');
+
+  if (c1i) c1i.destroy();
+  c1i = new Chart(document.getElementById('c1'), {
+    type: 'bar',
+    data: {
+      labels: teams.map(t => t.replace('FC ','')),
+      datasets: [{
+        data: totals,
+        backgroundColor: colors.map(c=>c+'BB'),
+        borderColor: colors,
+        borderWidth: 1.5,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 12, family: 'Oswald' } } },
+        y: { ticks: { callback: v => v.toLocaleString()+' ▪', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } }
+      }
+    }
+  });
+
+  const sorted = [...DATA].sort((a,b)=>a.stt-b.stt);
+  if (c2i) c2i.destroy();
+  c2i = new Chart(document.getElementById('c2'), {
+    type: 'bar',
+    data: {
+      labels: sorted.map(p => p.ten),
+      datasets: [{
+        data: sorted.map(p => p.val),
+        backgroundColor: sorted.map(p => TC[p.doi]+'99'),
+        borderColor: sorted.map(p => TC[p.doi]),
+        borderWidth: 1,
+        borderRadius: 2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45, autoSkip: false } },
+        y: { ticks: { callback: v => v.toLocaleString()+' ▪', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } }
+      }
+    }
+  });
+}
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function scrollToChart() {
+  document.getElementById('chartSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function exportData() {
+  const rows = ['STT,Tên,Đội,Số áo,Đánh giá,Giá trị,Tốc độ,Sức mạnh,Kỹ thuật,Tổng'];
+  DATA.forEach(p => {
+    rows.push([p.stt,p.ten,p.doi,p.so,p.rating+'/5',p.val,p.idx.toc||0,p.idx.suc||0,p.idx.ky||0,p.idx.tong||0].join(','));
+  });
+  const blob = new Blob(['\uFEFF'+rows.join('\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'transfer_market.csv';
+  a.click();
+  showToast('Đã xuất file CSV', 'success');
+}
+
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+const saved = localStorage.getItem('tmSaved');
+if (saved) document.getElementById('lastSaved').textContent = 'Đã lưu: ' + saved;
+
+renderStats();
+renderTable();
+renderCharts();
+</script>
+</body>
+</html>
