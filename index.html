@@ -150,6 +150,24 @@
         <div style="position:relative;width:100%;height:290px"><canvas id="c2"></canvas></div>
       </div>
     </div>
+    <div class="admin-sect">
+      <div class="admin-hdr">Yêu cầu mua/bán cầu thủ</div>
+      <div class="admin-body">
+        <div class="form-note" id="purchaseNoteHeader" style="margin-bottom:12px;color:#444;font-size:13px">Chỉ Chủ tịch CLB hoặc Admin mới xem/form giao dịch mua/bán.</div>
+        <div id="purchaseRequestSection" style="display:none">
+          <div class="form-row" style="margin-bottom:10px">
+            <div class="form-group" style="margin:0"><label class="form-label">Chọn cầu thủ</label><select class="form-input" id="purchasePlayerSel"></select></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Mua vào CLB</label><select class="form-input" id="purchaseBuyerClub"></select></div>
+          </div>
+          <div class="form-row" style="margin-bottom:10px">
+            <div class="form-group" style="margin:0"><label class="form-label">Giá đề nghị</label><input class="form-input" id="purchaseOffer" type="number" placeholder="100"></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Ghi chú</label><input class="form-input" id="purchaseNote" placeholder="Lý do..." /></div>
+          </div>
+          <button class="btn-save" onclick="submitPurchaseRequest()">Gửi yêu cầu mua</button>
+        </div>
+        <div class="admin-card" style="margin-top:16px"><h3>Yêu cầu mua/bán của bạn</h3><div id="myPurchaseSuggList"></div></div>
+      </div>
+    </div>
     <div class="admin-sect" id="marketTournamentSection">
       <div class="admin-hdr">Giải đấu</div>
       <div class="admin-body">
@@ -204,6 +222,9 @@
         <div class="form-row" style="margin-bottom:10px">
           <div class="form-group" style="margin:0"><label class="form-label">Ngày bắt đầu</label><input class="form-input" id="pageTStart" type="date"></div>
           <div class="form-group" style="margin:0"><label class="form-label">Ngày kết thúc</label><input class="form-input" id="pageTEnd" type="date"></div>
+        </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0"><label class="form-label">Giá tiền giải</label><input class="form-input" id="pageTPrize" type="number" placeholder="500"></div>
         </div>
         <button class="btn-save" onclick="addTournament()">Lưu giải</button>
       </div>
@@ -287,6 +308,7 @@
         <div class="admin-grid">
           <div class="admin-card"><h3>Đề xuất thêm cầu thủ</h3><div id="suggPlayerApprove"></div></div>
           <div class="admin-card"><h3>Đề xuất thưởng</h3><div id="suggBonusApprove"></div></div>
+          <div class="admin-card"><h3>Yêu cầu mua/bán</h3><div id="suggPurchaseApprove"></div></div>
         </div>
       </div>
     </div>
