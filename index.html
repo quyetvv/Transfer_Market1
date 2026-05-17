@@ -199,6 +199,21 @@
         </div>
       </div>
     </div>
+    <div class="admin-sect" id="tournamentSection" style="display:none">
+      <div class="admin-hdr">Quản lý giải đấu</div>
+      <div class="admin-body">
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0"><label class="form-label">Tên giải</label><input class="form-input" id="tName" placeholder="Tên giải"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Mùa giải</label><input class="form-input" id="tSeason" placeholder="2025/26"></div>
+        </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0"><label class="form-label">Ngày bắt đầu</label><input class="form-input" id="tStart" type="date"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Ngày kết thúc</label><input class="form-input" id="tEnd" type="date"></div>
+        </div>
+        <button class="btn-save" onclick="addTournament()">Tạo giải</button>
+        <div id="tournamentList" style="margin-top:14px"></div>
+      </div>
+    </div>
     <div class="admin-sect" id="suggApproveSection">
       <div class="admin-hdr" style="background:#2c3e50">📬 Đề xuất chờ duyệt</div>
       <div class="admin-body">

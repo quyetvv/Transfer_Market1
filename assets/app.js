@@ -69,6 +69,7 @@ let DATA = JSON.parse(localStorage.getItem("tmD") || JSON.stringify(INIT));
 let BL = JSON.parse(localStorage.getItem("tmBL") || "[]");
 let SUGG = JSON.parse(localStorage.getItem("tmSUGG") || "[]");
 let CUSTOM_BONUSES = JSON.parse(localStorage.getItem("tmCB") || "[]");
+let TOURNAMENTS = JSON.parse(localStorage.getItem("tmT") || "[]");
 let USERS = initUsers();
 let CU = null;
 let cF = "all";
@@ -144,21 +145,24 @@ function sd() {
   localStorage.setItem("tmBL", JSON.stringify(BL));
   localStorage.setItem("tmSUGG", JSON.stringify(SUGG));
   localStorage.setItem("tmCB", JSON.stringify(CUSTOM_BONUSES));
+  localStorage.setItem("tmT", JSON.stringify(TOURNAMENTS));
   fbSet("data/players", DATA);
   fbSet("data/bonusLog", BL.length ? BL : null);
   fbSet("data/suggestions", SUGG.length ? SUGG : null);
   fbSet("data/customBonuses", CUSTOM_BONUSES.length ? CUSTOM_BONUSES : null);
+  fbSet("data/tournaments", TOURNAMENTS.length ? TOURNAMENTS : null);
 }
 
 async function loadFromFirebase() {
   showLoading(true);
   try {
-    const [fbP, fbU, fbBL, fbSUGG, fbCB] = await Promise.all([
+    const [fbP, fbU, fbBL, fbSUGG, fbCB, fbT] = await Promise.all([
       fbGet("data/players"),
       fbGetUsers(),
       fbGet("data/bonusLog"),
       fbGet("data/suggestions"),
       fbGet("data/customBonuses"),
+      fbGet("data/tournaments"),
     ]);
     if (Array.isArray(fbP) && fbP.length > 0) {
       DATA = fbP;
@@ -191,6 +195,10 @@ async function loadFromFirebase() {
     if (Array.isArray(fbCB)) {
       CUSTOM_BONUSES = fbCB;
       localStorage.setItem("tmCB", JSON.stringify(CUSTOM_BONUSES));
+    }
+    if (Array.isArray(fbT)) {
+      TOURNAMENTS = fbT;
+      localStorage.setItem("tmT", JSON.stringify(TOURNAMENTS));
     }
     if (!fbP) fbSet("data/players", DATA);
     if (Array.isArray(fbU) && fbU.length === 0) USERS.forEach((u) => fbSetUser(u));
@@ -826,6 +834,8 @@ async function rAdmin() {
   } catch {}
   document.getElementById("adminPageBadge").textContent = isSuperAdmin() ? "SUPER ADMIN" : "ADMIN";
   document.getElementById("memberMgmtSection").style.display = isAdmin() ? "block" : "none";
+  document.getElementById("tournamentSection").style.display = isSuperAdmin() ? "block" : "none";
+  renderTournaments();
   const approved = USERS.filter((u) => u.ok);
   const reqAdmin = USERS.filter((u) => u.reqAdmin && u.role === "guest");
   const pendEl = document.getElementById("pendingList");
@@ -909,7 +919,53 @@ function addPlayer() {
   document.getElementById("nSo").value = "";
   document.getElementById("nVal").value = "";
   toast(`Đã thêm ${ten}`, "success");
+  renderTournaments();
   rAdmin();
+}
+
+function renderTournaments() {
+  const listEl = document.getElementById("tournamentList");
+  if (!listEl) return;
+  if (!TOURNAMENTS.length) {
+    listEl.innerHTML = '<div style="font-size:12px;color:#aaa;padding:10px;border:1px dashed #ccc;border-radius:4px">Chưa có giải đấu</div>';
+    return;
+  }
+  listEl.innerHTML = TOURNAMENTS.map((t) => {
+    const dates = `${t.start || 'N/A'} → ${t.end || 'N/A'}`;
+    return `<div class="sugg-item" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;padding:10px;border:1px solid #ddd;border-radius:4px;background:#fff"><div><div style="font-weight:600">${esc(t.name)} ${t.season ? `(${esc(t.season)})` : ''}</div><div style="font-size:12px;color:#666;margin-top:4px">${esc(dates)} · Tạo bởi ${esc(t.createdBy)}</div></div>${isSuperAdmin() ? `<button class="bsm bsm-del" onclick="deleteTournament('${t.id}')">Xoá</button>` : ''}</div>`;
+  }).join("");
+}
+
+function addTournament() {
+  const name = document.getElementById("tName").value.trim();
+  const season = document.getElementById("tSeason").value.trim();
+  const start = document.getElementById("tStart").value;
+  const end = document.getElementById("tEnd").value;
+  if (!name) {
+    toast("Nhập tên giải", "warn");
+    return;
+  }
+  if (!start || !end) {
+    toast("Chọn ngày bắt đầu và kết thúc", "warn");
+    return;
+  }
+  const id = `t_${Date.now()}`;
+  TOURNAMENTS.unshift({ id, name, season, start, end, createdBy: CU?.un || "Super Admin", createdAt: new Date().toLocaleString("vi-VN") });
+  sd();
+  document.getElementById("tName").value = "";
+  document.getElementById("tSeason").value = "";
+  document.getElementById("tStart").value = "";
+  document.getElementById("tEnd").value = "";
+  toast(`Đã tạo giải ${name}`, "success");
+  renderTournaments();
+}
+
+function deleteTournament(id) {
+  if (!confirm("Xoá giải đấu này?")) return;
+  TOURNAMENTS = TOURNAMENTS.filter((t) => t.id !== id);
+  sd();
+  toast("Đã xóa giải đấu", "success");
+  renderTournaments();
 }
 
 function deletePlayer() {
