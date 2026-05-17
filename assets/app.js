@@ -599,7 +599,10 @@ function renderBonusCard(b, ok, opts, teamOpts) {
   }
   const delBtn = isAdmin() && b.by !== "superadmin" ? `<button class="bsm bsm-del" onclick="deleteCustomBonus('${b.id}')" style="margin-left:4px">✕</button>` : "";
   const addedBy = b.addedBy ? `<span style="font-size:10px;color:#aaa"> (${esc(b.addedBy)})</span>` : "";
-  return `<div class="bcard"><div class="bcard-ttl"><span class="btag ${b.cls}">${esc(b.tag)} ▪</span>${esc(b.lbl)}${addedBy}</div><div class="bdesc">${esc(b.desc)}</div><div class="brow"><select class="bsel" id="bs-${b.id}">${opts}</select><button class="bapply" onclick="applyB('${b.id}')" ${ok ? "" : "disabled"}>Áp dụng</button>${delBtn}</div></div>`;
+  const scopeLabel = b.scope === "team" ? "Đội" : b.scope === "all" ? "Tất cả" : "Cá nhân";
+  const selector = b.scope === "team" ? `<select class="bsel" id="bs-${b.id}">${teamOpts}</select>` : b.scope === "individual" ? `<select class="bsel" id="bs-${b.id}">${opts}</select>` : `<span style="font-size:12px;color:#666">Áp dụng cho tất cả cầu thủ</span>`;
+  const excludeNote = b.exclude && b.exclude.length ? `<div style="margin-top:6px;font-size:11px;color:#666">Loại trừ: ${esc(b.exclude.join(", "))}</div>` : "";
+  return `<div class="bcard"><div class="bcard-ttl"><span class="btag ${b.cls}">${esc(b.tag)} ▪</span>${esc(b.lbl)}${addedBy}</div><div class="bdesc">${esc(b.desc)}${excludeNote}</div><div class="brow">${selector}<button class="bapply" onclick="applyB('${b.id}')" ${ok ? "" : "disabled"}>Áp dụng</button>${delBtn}</div><div style="font-size:11px;color:#666;margin-top:6px">${scopeLabel}</div></div>`;
 }
 
 function rBonus() {
@@ -616,20 +619,23 @@ function rBonus() {
   const bgEl = document.getElementById("bonusGrid");
   bgEl.innerHTML = allBonuses.map((b) => renderBonusCard(b, ok, opts, teamOpts)).join("");
   if (ok) {
-    bgEl.insertAdjacentHTML("beforeend", '<div class="bcard" style="border:2px dashed #ccc;background:#fafafa;display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:90px" onclick="document.getElementById(\'addBonusForm\').style.display=\'grid\'"><div style="text-align:center;color:#aaa"><div style="font-size:22px">+</div><div style="font-size:12px">Thêm loại thưởng</div></div></div><div id="addBonusForm" style="display:none;grid-column:1/-1;border:1px solid var(--bd);border-radius:4px;padding:12px;background:#f9f9f9"><div style="font-weight:600;font-size:13px;margin-bottom:9px">Thêm loại thưởng mới</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:9px"><div><label class="form-label">Tên thưởng</label><input class="form-input" id="cbLbl" placeholder="vd: Hattrick"></div><div><label class="form-label">Giá trị +</label><input class="form-input" type="number" id="cbAmt" placeholder="30"></div><div><label class="form-label">Mô tả</label><input class="form-input" id="cbDesc" placeholder="Ghi chú..."></div></div><div style="display:flex;gap:8px"><button class="btn-save" style="padding:7px 14px;font-size:13px" onclick="addCustomBonus()">Thêm</button><button class="btn-cancel" style="padding:7px 14px;font-size:13px" onclick="document.getElementById(\'addBonusForm\').style.display=\'none\'">Huỷ</button></div></div>');
+    bgEl.insertAdjacentHTML("beforeend", '<div class="bcard" style="border:2px dashed #ccc;background:#fafafa;display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:90px" onclick="document.getElementById(\'addBonusForm\').style.display=\'grid\'"><div style="text-align:center;color:#aaa"><div style="font-size:22px">+</div><div style="font-size:12px">Thêm loại thưởng</div></div></div><div id="addBonusForm" style="display:none;grid-column:1/-1;border:1px solid var(--bd);border-radius:4px;padding:12px;background:#f9f9f9"><div style="font-weight:600;font-size:13px;margin-bottom:9px">Thêm loại thưởng mới</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:9px"><div><label class="form-label">Tên thưởng</label><input class="form-input" id="cbLbl" placeholder="vd: Hattrick"></div><div><label class="form-label">Giá trị +</label><input class="form-input" type="number" id="cbAmt" placeholder="30"></div><div><label class="form-label">Mô tả</label><input class="form-input" id="cbDesc" placeholder="Ghi chú..."></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px"><div><label class="form-label">Loại thưởng</label><select class="form-input" id="cbScope"><option value="individual">Cá nhân</option><option value="team">Đội</option><option value="all">Tất cả</option></select></div><div><label class="form-label">Loại trừ</label><input class="form-input" id="cbExclude" placeholder="Tên cầu thủ, đội..."></div></div><div style="display:flex;gap:8px"><button class="btn-save" style="padding:7px 14px;font-size:13px" onclick="addCustomBonus()">Thêm</button><button class="btn-cancel" style="padding:7px 14px;font-size:13px" onclick="document.getElementById(\'addBonusForm\').style.display=\'none\'">Huỷ</button></div></div>');
   }
   rBH();
 }
 
 function addCustomBonus() {
   const lbl = document.getElementById("cbLbl").value.trim();
-  const amt = parseInt(document.getElementById("cbAmt").value, 10) || 0;
+  const amt = parseInt(document.getElementById("cbAmt").value, 10);
   const desc = document.getElementById("cbDesc").value.trim();
+  const scope = document.getElementById("cbScope").value;
+  const excludeText = document.getElementById("cbExclude").value.trim();
+  const exclude = excludeText.split(",").map((x) => x.trim()).filter(Boolean);
   if (!lbl || !amt) {
     toast("Nhập đủ tên và giá trị", "warn");
     return;
   }
-  CUSTOM_BONUSES.push({ id: `cb_${Date.now()}`, lbl, amt, tag: `+${amt}`, desc, cls: "special", type: "val", by: CU.role, addedBy: CU.un });
+  CUSTOM_BONUSES.push({ id: `cb_${Date.now()}`, lbl, amt, tag: `${amt > 0 ? "+" + amt : amt}`, desc, cls: "special", type: "val", scope, exclude, by: CU.role, addedBy: CU.un });
   sd();
   document.getElementById("addBonusForm").style.display = "none";
   toast(`Đã thêm loại thưởng: ${lbl}`, "success");
@@ -657,6 +663,43 @@ function applyB(bid) {
     openVdich(document.getElementById(`bs-${bid}`).value);
     return;
   }
+  const exclude = (b.exclude || []).map((x) => x.toLowerCase().trim()).filter(Boolean);
+  const isExcluded = (p) => exclude.some((e) => p.ten.toLowerCase().includes(e) || p.doi.toLowerCase().includes(e));
+  if (b.scope === "team") {
+    const team = document.getElementById(`bs-${bid}`).value;
+    const players = DATA.filter((x) => x.doi === team && !isExcluded(x));
+    if (!players.length) {
+      toast("Không có cầu thủ hợp lệ để áp dụng", "warn");
+      return;
+    }
+    players.forEach((p) => {
+      p.val += b.amt;
+      BL.unshift({ t: new Date().toLocaleString("vi-VN"), pl: p.ten, bn: `${b.lbl} ${b.amt > 0 ? "+" + b.amt : b.amt}`, by: CU.un });
+    });
+    if (BL.length > 60) BL.length = 60;
+    sd();
+    rBH();
+    toast(`Áp dụng ${b.lbl} cho ${players.length} cầu thủ`, "success");
+    rBonus();
+    return;
+  }
+  if (b.scope === "all") {
+    const players = DATA.filter((x) => !isExcluded(x));
+    if (!players.length) {
+      toast("Không có cầu thủ hợp lệ để áp dụng", "warn");
+      return;
+    }
+    players.forEach((p) => {
+      p.val += b.amt;
+      BL.unshift({ t: new Date().toLocaleString("vi-VN"), pl: p.ten, bn: `${b.lbl} ${b.amt > 0 ? "+" + b.amt : b.amt}`, by: CU.un });
+    });
+    if (BL.length > 60) BL.length = 60;
+    sd();
+    rBH();
+    toast(`Áp dụng ${b.lbl} cho tất cả cầu thủ`, "success");
+    rBonus();
+    return;
+  }
   const pid = parseInt(document.getElementById(`bs-${bid}`).value, 10);
   const p = DATA.find((x) => x.id === pid);
   if (!p) return;
@@ -668,11 +711,11 @@ function applyB(bid) {
     p.qbv = (p.qbv || 0) + 1;
   }
   p.val += b.amt;
-  BL.unshift({ t: new Date().toLocaleString("vi-VN"), pl: p.ten, bn: `${b.lbl} +${b.amt}`, by: CU.un });
+  BL.unshift({ t: new Date().toLocaleString("vi-VN"), pl: p.ten, bn: `${b.lbl} ${b.amt > 0 ? "+" + b.amt : b.amt}`, by: CU.un });
   if (BL.length > 60) BL.pop();
   sd();
   rBH();
-  toast(`${p.ten} +${b.amt} ▪ (${b.lbl})`, "success");
+  toast(`${p.ten} ${b.amt > 0 ? "+" + b.amt : b.amt} ▪ (${b.lbl})`, "success");
   rBonus();
 }
 
