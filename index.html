@@ -187,12 +187,12 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
         <div class="form-group"><label class="form-label">Xác nhận mật khẩu</label><input class="form-input" id="rPass2" type="password" placeholder="Nhập lại mật khẩu"></div>
         <button class="btn-auth" onclick="doRegister()">Tạo tài khoản</button>
         <div id="rMsg"></div>
-        <div class="pending-note" id="pendingNote">Tài khoản đã tạo! Vui lòng chờ admin phê duyệt. Đăng nhập để xem trạng thái.</div>
+        <div class="pending-note" id="pendingNote">Tạo tài khoản thành công!</div>
       </div>
     </div>
   </div>
 </div>
-
+ 
 <!-- APP HEADER -->
 <header class="site-header" id="mainApp" style="display:none">
   <div class="hdr-top">
@@ -201,7 +201,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
     <div class="user-pill">
       <span id="hBadge" class="ubadge"></span>
       <span id="hName" style="font-size:12px;color:rgba(255,255,255,.7)"></span>
-      <button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
+      <button id="btnReqMember" onclick="reqMemberFn()" style="display:none;background:#e8a317;color:#000;border:none;padding:4px 10px;border-radius:3px;font-size:12px;cursor:pointer;font-weight:600">Xin lên Hội viên</button><button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
     </div>
   </div>
   <nav class="hdr-nav">
@@ -210,7 +210,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
     <div class="nav-item" id="navAdmin" style="display:none" onclick="showPage('Admin')">Admin</div>
   </nav>
 </header>
-
+ 
 <div class="container" id="appCont" style="display:none">
   <!-- MARKET -->
   <div id="pageMarket">
@@ -251,7 +251,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
       </div>
     </div>
   </div>
-
+ 
   <!-- BONUS -->
   <div id="pageBonus" style="display:none">
     <div class="page-title-bar"><h1>Thưởng chỉ số sau trận đấu</h1><span class="pbadge">Live</span></div>
@@ -265,15 +265,15 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
       </div>
     </div>
   </div>
-
+ 
   <!-- ADMIN -->
   <div id="pageAdmin" style="display:none">
-    <div class="page-title-bar" style="background:#7d1b1b"><h1>Bảng điều khiển Admin</h1><span class="pbadge" style="background:#ff6b6b;color:#fff">SUPER ADMIN</span></div>
-    <div class="admin-sect">
+    <div class="page-title-bar" style="background:#7d1b1b"><h1>Bảng điều khiển Admin</h1><span class="pbadge" id="adminPageBadge" style="background:#ff6b6b;color:#fff">ADMIN</span></div>
+    <div class="admin-sect" id="memberMgmtSection">
       <div class="admin-hdr">Quản lý tài khoản</div>
       <div class="admin-body">
         <div class="admin-grid">
-          <div class="admin-card"><h3>Chờ duyệt</h3><div id="pendingList"></div></div>
+          <div class="admin-card"><h3>Guest xin lên Hội viên</h3><div id="pendingList"><div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Chưa có yêu cầu</div></div></div>
           <div class="admin-card"><h3>Tất cả thành viên</h3><div id="allUsers"></div></div>
         </div>
         <div style="margin-top:12px;padding:10px 14px;background:#fef9e7;border:1px solid #f9e79f;border-radius:3px;font-size:12px;color:#7d6608">
@@ -312,7 +312,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
     </div>
   </div>
 </div>
-
+ 
 <!-- EDIT MODAL -->
 <div class="modal-ov" id="modalOv">
   <div class="modal">
@@ -342,12 +342,12 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
   </div>
 </div>
 <div class="toast" id="toast"></div>
-
+ 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 // simple hash
 function h(s){let v=0;for(let i=0;i<s.length;i++){v=((v<<5)-v)+s.charCodeAt(i);v|=0}return v.toString(36)}
-
+ 
 const BONUSES=[
   {id:'vdich',   lbl:'Vô địch',                tag:'+20',  type:'val', amt:20,  cls:'',       desc:'Đội vô địch giải đấu — mỗi cầu thủ +20'},
   {id:'vuabt',   lbl:'Vua bàn thắng',          tag:'+50',  type:'val', amt:50,  cls:'special',desc:'Cầu thủ ghi nhiều bàn nhất +50'},
@@ -357,7 +357,7 @@ const BONUSES=[
   {id:'puskas',  lbl:'Puskas',                 tag:'+20',  type:'val', amt:20,  cls:'special',desc:'Bàn thắng đẹp nhất +20'},
   {id:'hvtm',    lbl:'HV Thủ môn',             tag:'+20',  type:'gk',  amt:20,  cls:'gk',     desc:'Thủ môn cộng +20 mỗi lần tăng chỉ số tổng'},
 ];
-
+ 
 const INIT=[
   {id:1, stt:1, so:'09',ten:'TDũng',  doi:'FC Mobile',  rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
   {id:2, stt:2, so:'07',ten:'BKhang', doi:'FC Mobile',  rating:3,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
@@ -387,29 +387,29 @@ const INIT=[
   {id:25,stt:25,so:'',  ten:'KMinh1', doi:'FC Sĩ Gái',  rating:3,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
   {id:26,stt:26,so:'',  ten:'ĐMinh',  doi:'FC Sĩ Gái',  rating:1,val:50,  idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
 ];
-
+ 
 const ADMIN_H=h('hanhnguyen110312');
 const TC={'FC Mobile':'#185FA5','FC Bựa Dâm':'#27ae60','FC Sĩ Gái':'#8e44ad'};
 const TL={'FC Mobile':'#d6eaf8','FC Bựa Dâm':'#d5f5e3','FC Sĩ Gái':'#e8daef'};
 const TD={'FC Mobile':'#0c3460','FC Bựa Dâm':'#1e8449','FC Sĩ Gái':'#6c3483'};
-
+ 
 // version reset
 const VER='v5';
 if(localStorage.getItem('tmV')!==VER){localStorage.removeItem('tmD');localStorage.removeItem('tmBL');localStorage.setItem('tmV',VER)}
-
+ 
 let DATA=JSON.parse(localStorage.getItem('tmD')||JSON.stringify(INIT));
 let BL=JSON.parse(localStorage.getItem('tmBL')||'[]');
 let USERS=initUsers();
 let CU=null, cF='all', cS='val', eId=null, c1=null, c2=null;
-
+ 
 function initUsers(){
   let us=JSON.parse(localStorage.getItem('tmU')||'[]');
-  if(!us.find(u=>u.un==='vquyetthang'))us.push({un:'vquyetthang',h:ADMIN_H,role:'admin',ok:true,ep:[]});
+  if(!us.find(u=>u.un==='vquyetthang'))us.push({un:'vquyetthang',h:ADMIN_H,role:'superadmin',ok:true,ep:[]});
   localStorage.setItem('tmU',JSON.stringify(us));
   return us;
 }
 function sd(){localStorage.setItem('tmD',JSON.stringify(DATA));localStorage.setItem('tmU',JSON.stringify(USERS));localStorage.setItem('tmBL',JSON.stringify(BL))}
-
+ 
 function stars(r){let s='';for(let i=0;i<r;i++)s+='★';for(let i=r;i<5;i++)s+='☆';return s}
 function ini(n){return n.substring(0,2).toUpperCase()}
 function itot(idx){return(idx.toc||0)+(idx.suc||0)+(idx.ky||0)+(idx.tong||0)}
@@ -420,8 +420,10 @@ function idxB(p){
 }
 function sq(s){return '<span style="display:inline-block;width:'+s+'px;height:'+s+'px;background:currentColor;vertical-align:middle;margin-left:1px"></span>'}
 function toast(msg,t=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800)}
-function canE(){return CU&&(CU.role==='admin'||CU.role==='member')}
-
+function canE(){return CU&&(CU.role==='superadmin'||CU.role==='admin'||CU.role==='member')}
+function isSuperAdmin(){return CU&&CU.role==='superadmin'}
+function isAdmin(){return CU&&(CU.role==='admin'||CU.role==='superadmin')}
+ 
 // AUTH
 function switchTab(tab){
   document.querySelectorAll('.auth-tab').forEach((b,i)=>b.classList[i===(tab==='login'?0:1)?'add':'remove']('active'));
@@ -435,7 +437,7 @@ function doLogin(){
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   const usr=USERS.find(x=>x.un===u&&x.h===h(p));
   if(!usr){m.innerHTML='<div class="auth-msg err">Sai tên đăng nhập hoặc mật khẩu</div>';return}
-  if(!usr.ok){m.innerHTML='<div class="auth-msg warn">Tài khoản đang chờ admin duyệt</div>';return}
+  // ok always true now - no admin approval needed for login
   CU=usr;enterApp();
 }
 function doRegister(){
@@ -447,11 +449,11 @@ function doRegister(){
   if(p.length<6){m.innerHTML='<div class="auth-msg err">Mật khẩu ít nhất 6 ký tự</div>';return}
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   if(USERS.find(x=>x.un===u)){m.innerHTML='<div class="auth-msg err">Username đã tồn tại</div>';return}
-  USERS.push({un:u,h:h(p),role:'guest',ok:false,ep:[]});
+  USERS.push({un:u,h:h(p),role:'guest',ok:true,ep:[]});
   localStorage.setItem('tmU',JSON.stringify(USERS));
-  m.innerHTML='';
+  m.innerHTML='<div class="auth-msg ok">Tạo tài khoản thành công! Đang chuyển hướng...</div>';
   document.getElementById('rUser').value='';document.getElementById('rPass').value='';document.getElementById('rPass2').value='';
-  document.getElementById('pendingNote').style.display='block';
+  setTimeout(()=>switchTab('login'),1500);
 }
 function doLogout(){
   CU=null;
@@ -465,13 +467,15 @@ function enterApp(){
   document.getElementById('mainApp').style.display='block';
   document.getElementById('appCont').style.display='block';
   const b=document.getElementById('hBadge');
-  b.textContent=CU.role==='admin'?'SUPER ADMIN':CU.role==='member'?'Hội viên':'Guest';
-  b.className='ubadge '+(CU.role==='admin'?'admin':CU.role==='member'?'member':'guest');
+  b.textContent=CU.role==='superadmin'?'SUPER ADMIN':CU.role==='admin'?'Admin':CU.role==='member'?'Hội viên':'Guest';
+  b.className='ubadge '+(CU.role==='superadmin'?'admin':CU.role==='admin'?'admin':CU.role==='member'?'member':'guest');
   document.getElementById('hName').textContent=CU.un;
-  document.getElementById('navAdmin').style.display=CU.role==='admin'?'block':'none';
+  document.getElementById('navAdmin').style.display=isAdmin()?'block':'none';
+  document.getElementById('btnReqMember').style.display=(CU.role==='guest')?'block':'none';
+  updateReqBtn();
   showPage('Market');
 }
-
+ 
 // PAGES
 function showPage(p){
   ['Market','Bonus','Admin'].forEach(x=>document.getElementById('page'+x).style.display='none');
@@ -483,7 +487,7 @@ function showPage(p){
   if(p==='Bonus'){rBonus()}
   if(p==='Admin'){rAdmin()}
 }
-
+ 
 // MARKET
 function getF(){
   let d=cF==='all'?[...DATA]:DATA.filter(p=>p.doi===cF);
@@ -514,7 +518,7 @@ function rTable(){
     const rk=p.rank<=3?'t'+p.rank:'';
     const rd=p.rank<=3?['🥇','🥈','🥉'][p.rank-1]:p.rank;
     let ce=false;
-    if(CU){if(CU.role==='admin')ce=true;else if(CU.role==='member'&&(CU.ep||[]).includes(p.id))ce=true;}
+    if(CU){if(CU.role==='superadmin'||CU.role==='admin')ce=true;else if(CU.role==='member'&&(CU.ep||[]).includes(p.id))ce=true;}
     const dis=ce?'':'disabled';
     return '<tr><td class="rnk '+rk+'">'+rd+'</td><td><div class="pcell"><div class="av" style="background:'+tl+';color:'+tdk+';border-color:'+tc+'">'+ini(p.ten)+'</div><div><div class="pname">'+p.ten+'</div><div class="pso">'+( p.so?'#'+p.so:'')+'</div></div></div></td><td><span class="tbadge" style="background:'+tl+';color:'+tdk+'">'+p.doi.replace('FC ','')+'</span></td><td><span class="stars">'+stars(p.rating)+'</span></td><td class="vcell" style="color:'+tc+'">'+p.val.toLocaleString()+' '+sq(9)+'</td><td><input type="number" class="vi" id="vi-'+p.id+'" value="'+p.val+'" '+dis+' onchange="qSave('+p.id+',this)" oninput="this.classList.add(\'changed\')" title="'+(ce?'Nhập giá trị mới':'Không có quyền')+'"></td><td>'+idxB(p)+'</td><td><div class="bar-bg"><div class="bar-fill" style="width:'+bw+'%;background:'+tc+'"></div></div></td><td><button class="edbtn" onclick="openModal('+p.id+')" '+dis+'>Sửa</button></td></tr>';
   }).join('');
@@ -569,7 +573,7 @@ function rCharts(){
   if(c2)c2.destroy();
   c2=new Chart(document.getElementById('c2'),{type:'bar',data:{labels:sorted.map(p=>p.ten),datasets:[{data:sorted.map(p=>p.val),backgroundColor:sorted.map(p=>TC[p.doi]+'99'),borderColor:sorted.map(p=>TC[p.doi]),borderWidth:1,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45,autoSkip:false}},y:{ticks:{callback:v=>v.toLocaleString()+' ▪',font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}}}}});
 }
-
+ 
 // BONUS
 function rBonus(){
   const ok=canE();
@@ -599,16 +603,21 @@ function rBH(){
   const el=document.getElementById('bonusHist');
   el.innerHTML=BL.length?BL.slice(0,20).map(x=>'<div class="hist-item"><span><b>'+x.pl+'</b> — '+x.bn+'</span><span style="color:#aaa;font-size:10px">'+x.t+' · '+x.by+'</span></div>').join(''):'<div style="font-size:12px;color:#aaa;text-align:center;padding:10px">Chưa có lịch sử</div>';
 }
-
+ 
 // ADMIN
 function rAdmin(){
+  // Ẩn/hiện quản lý thành viên tuỳ quyền
+  const mgmt=document.getElementById('memberMgmtSection');
+  if(mgmt)mgmt.style.display=isSuperAdmin()?'block':'none';
+  const badge=document.getElementById('adminPageBadge');
+  if(badge)badge.textContent=isSuperAdmin()?'SUPER ADMIN':'ADMIN';
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   const pending=USERS.filter(u=>!u.ok);
   document.getElementById('pendingList').innerHTML=pending.length?pending.map(u=>'<div class="urow"><span>'+u.un+'</span><div style="display:flex;gap:4px"><button class="bsm bsm-ok" onclick="approveU(\''+u.un+'\')">Duyệt</button><button class="bsm bsm-del" onclick="delU(\''+u.un+'\')">Xoá</button></div></div>').join(''):'<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Không có tài khoản chờ</div>';
   const approved=USERS.filter(u=>u.ok);
   const mCount=approved.filter(u=>u.role==='member').length;
   document.getElementById('allUsers').innerHTML=approved.map(u=>{
-    const rb='<span class="urole r-'+u.role+'">'+(u.role==='admin'?'Admin':u.role==='member'?'Hội viên':'Guest')+'</span>';
+    const rb='<span class="urole r-'+u.role+'">'+(u.role==='superadmin'?'Super Admin':u.role==='admin'?'Admin':u.role==='member'?'Hội viên':'Guest')+'</span>';
     const ep=(u.ep||[]).map(id=>{const pl=DATA.find(p=>p.id===id);return pl?pl.ten:'?'}).join(', ');
     return '<div class="urow"><div><div>'+u.un+' '+rb+'</div>'+(u.role==='member'&&ep?'<div style="font-size:10px;color:#666;margin-top:2px">Sửa: '+ep+'</div>':'')+'</div><div style="display:flex;gap:4px;flex-wrap:wrap">'+(u.un==='vquyetthang'?'<span style="font-size:11px;color:#aaa">Super Admin</span>':(u.role==='guest'&&mCount<3?'<button class="bsm bsm-mb" onclick="promU(\''+u.un+'\')">Hội viên</button>':'')+(u.role==='member'?'<button class="bsm bsm-dg" onclick="demU(\''+u.un+'\')">Guest</button>':'')+( u.un!=='vquyetthang'?'<button class="bsm bsm-del" onclick="delU(\''+u.un+'\')">Xoá</button>':''))+'</div></div>';
   }).join('');
@@ -631,6 +640,7 @@ function promU(un){
   const u=USERS.find(x=>x.un===un);
   if(u){
     u.role='member';
+    u.reqMember=false;
     const ids=DATA.map(p=>p.id).sort(()=>Math.random()-.5).slice(0,3);
     u.ep=ids;
     localStorage.setItem('tmU',JSON.stringify(USERS));
@@ -638,10 +648,33 @@ function promU(un){
     toast(un+' → Hội viên. Sửa được: '+names,'success');rAdmin();
   }
 }
+function makeAdminU(un){
+  USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
+  const u=USERS.find(x=>x.un===un);
+  if(u){u.role='admin';u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));toast(un+' → Admin','success');rAdmin()}
+}
+function rejectReq(un){
+  USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
+  const u=USERS.find(x=>x.un===un);
+  if(u){u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));toast('Đã từ chối yêu cầu của '+un);rAdmin()}
+}
 function demU(un){
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   const u=USERS.find(x=>x.un===un);
-  if(u){u.role='guest';u.ep=[];localStorage.setItem('tmU',JSON.stringify(USERS));toast(un+' → Guest');rAdmin()}
+  if(u){u.role='guest';u.ep=[];u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));toast(un+' → Guest');rAdmin()}
+}
+function updateReqBtn(){
+  USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
+  const u=USERS.find(x=>x.un===CU?.un);
+  const btn=document.getElementById('btnReqMember');
+  if(!btn)return;
+  if(u&&u.reqMember){btn.textContent='Đang chờ duyệt...';btn.disabled=true;btn.style.opacity='.6';}
+  else{btn.textContent='Xin lên Hội viên';btn.disabled=false;btn.style.opacity='1';}
+}
+function reqMemberFn(){
+  USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
+  const u=USERS.find(x=>x.un===CU?.un);
+  if(u){u.reqMember=true;localStorage.setItem('tmU',JSON.stringify(USERS));updateReqBtn();toast('Đã gửi yêu cầu lên Hội viên đến admin!','success')}
 }
 function addPlayer(){
   const ten=document.getElementById('nTen').value.trim();
