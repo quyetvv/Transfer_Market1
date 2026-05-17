@@ -211,6 +211,7 @@ async function loadFromFirebase() {
     rStats();
     rTable();
     rCharts();
+    renderTournaments();
   }
   if (cur === "Thưởng sau trận") rBonus();
   if (cur === "Admin") {
@@ -400,6 +401,9 @@ function showPage(p) {
   if (p === "Admin") {
     rAdmin();
     renderSuggApprove();
+  }
+  if (p === "Market") {
+    renderTournaments();
   }
 }
 
@@ -925,15 +929,19 @@ function addPlayer() {
 
 function renderTournaments() {
   const listEl = document.getElementById("tournamentList");
-  if (!listEl) return;
-  if (!TOURNAMENTS.length) {
-    listEl.innerHTML = '<div style="font-size:12px;color:#aaa;padding:10px;border:1px dashed #ccc;border-radius:4px">Chưa có giải đấu</div>';
-    return;
+  const marketListEl = document.getElementById("marketTournamentList");
+  const controlsEl = document.getElementById("tournamentControls");
+  if (controlsEl) {
+    controlsEl.style.display = isAdmin() ? "block" : "none";
   }
-  listEl.innerHTML = TOURNAMENTS.map((t) => {
+  const html = TOURNAMENTS.length ? TOURNAMENTS.map((t) => {
     const dates = `${t.start || 'N/A'} → ${t.end || 'N/A'}`;
-    return `<div class="sugg-item" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;padding:10px;border:1px solid #ddd;border-radius:4px;background:#fff"><div><div style="font-weight:600">${esc(t.name)} ${t.season ? `(${esc(t.season)})` : ''}</div><div style="font-size:12px;color:#666;margin-top:4px">${esc(dates)} · Tạo bởi ${esc(t.createdBy)}</div></div>${isSuperAdmin() ? `<button class="bsm bsm-del" onclick="deleteTournament('${t.id}')">Xoá</button>` : ''}</div>`;
-  }).join("");
+    const canDelete = isAdmin();
+    const deleteBtn = canDelete ? `<button class="bsm bsm-del" onclick="deleteTournament('${t.id}')">Xoá</button>` : "";
+    return `<div class="sugg-item" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;padding:10px;border:1px solid #ddd;border-radius:4px;background:#fff"><div><div style="font-weight:600">${esc(t.name)} ${t.season ? `(${esc(t.season)})` : ''}</div><div style="font-size:12px;color:#666;margin-top:4px">${esc(dates)} · Tạo bởi ${esc(t.createdBy)}</div></div>${deleteBtn}</div>`;
+  }).join("") : '<div style="font-size:12px;color:#aaa;padding:10px;border:1px dashed #ccc;border-radius:4px">Chưa có giải đấu</div>';
+  if (listEl) listEl.innerHTML = html;
+  if (marketListEl) marketListEl.innerHTML = html;
 }
 
 function addTournament() {

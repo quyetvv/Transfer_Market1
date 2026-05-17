@@ -149,6 +149,24 @@
         <div style="position:relative;width:100%;height:290px"><canvas id="c2"></canvas></div>
       </div>
     </div>
+    <div class="admin-sect" id="marketTournamentSection">
+      <div class="admin-hdr">Giải đấu</div>
+      <div class="admin-body">
+        <div id="tournamentNotice" style="font-size:12px;color:#666;margin-bottom:12px">Tất cả người dùng có thể xem danh sách giải đấu. Chỉ Admin/Super Admin mới có thể tạo, xóa giải.</div>
+        <div id="tournamentControls" style="display:none;margin-bottom:12px">
+          <div class="form-row" style="margin-bottom:10px">
+            <div class="form-group" style="margin:0"><label class="form-label">Tên giải</label><input class="form-input" id="tName" placeholder="Tên giải"></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Mùa giải</label><input class="form-input" id="tSeason" placeholder="2025/26"></div>
+          </div>
+          <div class="form-row" style="margin-bottom:10px">
+            <div class="form-group" style="margin:0"><label class="form-label">Ngày bắt đầu</label><input class="form-input" id="tStart" type="date"></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Ngày kết thúc</label><input class="form-input" id="tEnd" type="date"></div>
+          </div>
+          <button class="btn-save" onclick="addTournament()">Tạo giải</button>
+        </div>
+        <div id="marketTournamentList"></div>
+      </div>
+    </div>
   </div>
 
   <div id="pageBonus" style="display:none">
@@ -197,21 +215,6 @@
           <div class="admin-card"><h3>Guest xin lên Admin</h3><div id="pendingList"></div></div>
           <div class="admin-card"><h3>Tất cả thành viên</h3><div id="allUsers"></div></div>
         </div>
-      </div>
-    </div>
-    <div class="admin-sect" id="tournamentSection" style="display:none">
-      <div class="admin-hdr">Quản lý giải đấu</div>
-      <div class="admin-body">
-        <div class="form-row" style="margin-bottom:10px">
-          <div class="form-group" style="margin:0"><label class="form-label">Tên giải</label><input class="form-input" id="tName" placeholder="Tên giải"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">Mùa giải</label><input class="form-input" id="tSeason" placeholder="2025/26"></div>
-        </div>
-        <div class="form-row" style="margin-bottom:10px">
-          <div class="form-group" style="margin:0"><label class="form-label">Ngày bắt đầu</label><input class="form-input" id="tStart" type="date"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">Ngày kết thúc</label><input class="form-input" id="tEnd" type="date"></div>
-        </div>
-        <button class="btn-save" onclick="addTournament()">Tạo giải</button>
-        <div id="tournamentList" style="margin-top:14px"></div>
       </div>
     </div>
     <div class="admin-sect" id="suggApproveSection">
