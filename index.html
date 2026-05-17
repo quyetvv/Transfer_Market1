@@ -53,6 +53,7 @@
   </div>
   <nav class="hdr-nav">
     <div class="nav-item active" onclick="showPage('Market')">Thị trường</div>
+    <div class="nav-item" onclick="showPage('Tournament')">Giải đấu</div>
     <div class="nav-item" onclick="showPage('Bonus')">Thưởng sau trận</div>
     <div class="nav-item" id="navAdmin" style="display:none" onclick="showPage('Admin')">Admin</div>
   </nav>
@@ -166,6 +167,69 @@
         </div>
         <div id="marketTournamentList"></div>
       </div>
+    </div>
+    <div class="admin-sect" id="purchaseRequestSection" style="display:none">
+      <div class="admin-hdr">Yêu cầu mua cầu thủ</div>
+      <div class="admin-body">
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0"><label class="form-label">Chọn cầu thủ</label><select class="form-input" id="purchasePlayerSel"></select></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Mua cho CLB</label><select class="form-input" id="purchaseBuyerClub"></select></div>
+        </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0"><label class="form-label">Giá đề nghị</label><input class="form-input" id="purchaseOffer" type="number" placeholder="100"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Ghi chú</label><input class="form-input" id="purchaseNote" placeholder="Lý do..." /></div>
+        </div>
+        <button class="btn-save" onclick="submitPurchaseRequest()">Gửi yêu cầu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pageTournament" style="display:none">
+    <div class="page-title-bar"><h1>Quản lý giải đấu</h1><span class="pbadge">Giải đấu</span></div>
+    <div class="stats-row" id="tournamentSummary" style="margin-bottom:16px"></div>
+    <div class="admin-sect">
+      <div class="admin-hdr">Chọn giải</div>
+      <div class="admin-body" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <select class="form-input" id="selTournament" style="min-width:220px" onchange="selectTournament(this.value)"></select>
+        <button class="btn-save" id="addTournamentBtn" style="display:none" onclick="document.getElementById('tournamentForm').style.display='block'">Tạo giải mới</button>
+      </div>
+    </div>
+    <div class="admin-sect" id="tournamentForm" style="display:none">
+      <div class="admin-hdr">Tạo giải đấu mới</div>
+      <div class="admin-body">
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0"><label class="form-label">Tên giải</label><input class="form-input" id="pageTName" placeholder="Tên giải"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Mùa giải</label><input class="form-input" id="pageTSeason" placeholder="2025/26"></div>
+        </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0"><label class="form-label">Ngày bắt đầu</label><input class="form-input" id="pageTStart" type="date"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Ngày kết thúc</label><input class="form-input" id="pageTEnd" type="date"></div>
+        </div>
+        <button class="btn-save" onclick="addTournament()">Lưu giải</button>
+      </div>
+    </div>
+    <div class="admin-sect" id="tournamentMatchForm" style="display:none">
+      <div class="admin-hdr">Lịch đấu mới</div>
+      <div class="admin-body">
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0"><label class="form-label">Ngày</label><input class="form-input" id="matchDate" type="date"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Đội chủ nhà</label><select class="form-input" id="matchHome"></select></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Đội khách</label><select class="form-input" id="matchAway"></select></div>
+        </div>
+        <button class="btn-save" onclick="addTournamentMatch()">Thêm trận</button>
+      </div>
+    </div>
+    <div class="admin-sect">
+      <div class="admin-hdr">Lịch thi đấu</div>
+      <div class="admin-body" id="tournamentSchedule"></div>
+    </div>
+    <div class="admin-sect">
+      <div class="admin-hdr">Bảng xếp hạng</div>
+      <div class="admin-body" id="tournamentStandings"></div>
+    </div>
+    <div class="admin-sect">
+      <div class="admin-hdr">Quỹ CLB</div>
+      <div class="admin-body" id="clubFunds"></div>
     </div>
   </div>
 
