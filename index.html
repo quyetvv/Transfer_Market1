@@ -487,20 +487,18 @@ function showLoading(on){
   el.style.display=on?'block':'none';
 }
 // ── Firebase helpers ──
-function fbSet(path, val){ if(!window._fb)return; const {db,ref,set}=window._fb; set(ref(db,path),val); }
-function fbGet(path){ if(!window._fb)return Promise.resolve(null); const {db,ref,get}=window._fb; return get(ref(db,path)).then(s=>s.exists()?s.val():null); }
-function fbListen(path,cb){ if(!window._fb)return; const {db,ref,onValue}=window._fb; onValue(ref(db,path),s=>cb(s.exists()?s.val():null)); }
+// Chờ Firebase ready rồi mới thực thi
+function fbReady(){ return new Promise(res=>{ if(window._fbReady)res(); else window.addEventListener('fbReady',res,{once:true}); }); }
+async function fbSet(path, val){ await fbReady(); const {db,ref,set}=window._fb; return set(ref(db,path),val); }
+async function fbGet(path){ await fbReady(); const {db,ref,get}=window._fb; const s=await get(ref(db,path)); return s.exists()?s.val():null; }
+function fbListen(path,cb){ fbReady().then(()=>{ const {db,ref,onValue}=window._fb; onValue(ref(db,path),s=>cb(s.exists()?s.val():null)); }); }
 
 // Convert users array <-> object để lưu Firebase an toàn
-function usersToObj(arr){ const o={}; arr.forEach(u=>{ o[u.un]=u; }); return o; }
 function objToUsers(obj){ if(!obj)return []; return Object.values(obj); }
 
-// Lưu/load users riêng từng record thay vì ghi đè cả array
-function fbSetUser(u){ if(!window._fb)return; fbSet('users/'+u.un, u); }
-async function fbGetUsers(){
-  const obj = await fbGet('users');
-  return objToUsers(obj);
-}
+// Lưu/load users riêng từng record
+async function fbSetUser(u){ await fbSet('users/'+u.un, u); }
+async function fbGetUsers(){ const obj=await fbGet('users'); return objToUsers(obj); }
 
 function sd(){
   // Lưu cả localStorage (fallback) và Firebase
