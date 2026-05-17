@@ -161,6 +161,18 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
 .toast.show{transform:translateY(0);opacity:1}.toast.success{background:#27ae60}.toast.warn{background:#e8a317;color:#000}
 @media(max-width:700px){.stats-row{grid-template-columns:repeat(2,1fr)}.admin-grid{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}}
 
+/* ── SUGGESTIONS ── */
+.sugg-sect{background:var(--tm-card);border:1px solid var(--tm-border);border-radius:2px;margin-bottom:16px;overflow:hidden}
+.sugg-hdr{background:#2c3e50;color:#fff;padding:9px 14px;font-family:'Oswald',sans-serif;font-size:14px;font-weight:500;display:flex;align-items:center;justify-content:space-between}
+.sugg-body{padding:14px}
+.sugg-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.sugg-item{border:1px solid var(--tm-border);border-radius:3px;padding:10px 12px;background:#f9f9f9;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px}
+.sugg-status{font-size:10px;font-weight:700;padding:2px 7px;border-radius:2px}
+.ss-pending{background:#fef9e7;color:#7d6608;border:1px solid #f9e79f}
+.ss-approved{background:#d5f5e3;color:#1e8449}
+.ss-rejected{background:#fadbd8;color:#922b21}
+.sugg-note{font-size:11px;color:var(--tm-muted);background:#f0f4f8;padding:8px 12px;border-radius:3px;margin-bottom:12px;border-left:3px solid #185FA5}
+
 /* ── MOBILE RESPONSIVE ── */
 @media(max-width:768px){
   .hdr-top{padding:8px 12px;gap:8px;flex-wrap:wrap}
@@ -275,6 +287,25 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
       <div style="margin-left:auto"><button class="btn-cancel" onclick="exportData()" style="font-size:12px;padding:5px 12px">Xuất CSV</button></div>
     </div>
     <div class="stats-row" id="statsRow"></div>
+    <!-- ĐỀ XUẤT THÊM CẦU THỦ CHO GUEST -->
+    <div class="sugg-sect" id="suggPlayerSection" style="display:none">
+      <div class="sugg-hdr"><span>💡 Đề xuất thêm cầu thủ mới</span><span style="font-size:12px;opacity:.7">Admin sẽ xem xét và duyệt</span></div>
+      <div class="sugg-body">
+        <div class="sugg-note">Điền thông tin cầu thủ bạn muốn thêm — Admin/Super Admin sẽ phê duyệt.</div>
+        <div class="sugg-form">
+          <div class="form-group" style="margin:0"><label class="form-label">Tên cầu thủ</label><input class="form-input" id="spTen" placeholder="Tên"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Số áo</label><input class="form-input" id="spSo" placeholder="Số áo"></div>
+        </div>
+        <div class="sugg-form">
+          <div class="form-group" style="margin:0"><label class="form-label">Đội</label>
+            <select class="form-input" id="spDoi"><option>FC Mobile</option><option>FC Bựa Dâm</option><option>FC Sĩ Gái</option></select>
+          </div>
+          <div class="form-group" style="margin:0"><label class="form-label">Giá trị đề xuất</label><input class="form-input" id="spVal" type="number" placeholder="100"></div>
+        </div>
+        <button class="btn-save" onclick="submitPlayerSugg()" style="font-size:13px;padding:8px 18px">Gửi đề xuất</button>
+        <div style="margin-top:12px" id="myPlayerSuggList"></div>
+      </div>
+    </div>
     <div class="filter-bar">
       <span class="slbl">Đội:</span>
       <button class="fb active" onclick="setFilter('all',this)">Tất cả</button>
@@ -311,6 +342,38 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
   <!-- BONUS -->
   <div id="pageBonus" style="display:none">
     <div class="page-title-bar"><h1>Thưởng chỉ số sau trận đấu</h1><span class="pbadge">Live</span></div>
+    <!-- PHẦN ĐỀ XUẤT CHO GUEST -->
+    <div class="sugg-sect" id="suggSection" style="display:none">
+      <div class="sugg-hdr"><span>💡 Gửi đề xuất thưởng</span><span style="font-size:12px;opacity:.7">Đề xuất sẽ được gửi đến Admin</span></div>
+      <div class="sugg-body">
+        <div class="sugg-note">Bạn là Guest — không thể áp dụng thưởng trực tiếp. Hãy gửi đề xuất để Admin xem xét.</div>
+        <div class="sugg-form">
+          <div class="form-group" style="margin:0"><label class="form-label">Loại thưởng</label>
+            <select class="form-input" id="suggBonusSel">
+              <option value="vdich">Vô địch (+20)</option>
+              <option value="vuabt">Vua bàn thắng (+50)</option>
+              <option value="vuakt">Vua kiến tạo (+25)</option>
+              <option value="cxsnhat">Cầu thủ xuất sắc nhất (+50)</option>
+              <option value="qbv">Quả bóng vàng (+50)</option>
+              <option value="puskas">Puskas (+20)</option>
+              <option value="hvtm">HV Thủ môn (+20)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0"><label class="form-label">Cầu thủ</label>
+            <select class="form-input" id="suggPlayerSel"></select>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Ghi chú (tuỳ chọn)</label>
+          <input class="form-input" id="suggNote" placeholder="Lý do đề xuất...">
+        </div>
+        <button class="btn-save" onclick="submitBonusSugg()" style="font-size:13px;padding:8px 18px">Gửi đề xuất</button>
+        <div style="margin-top:12px">
+          <div style="font-size:12px;font-weight:600;color:var(--tm-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Đề xuất của tôi</div>
+          <div id="mySuggList"></div>
+        </div>
+      </div>
+    </div>
+    <!-- PHẦN THƯỞNG CHO ADMIN -->
     <div class="bonus-sect">
       <div class="bonus-hdr"><span>Các loại thưởng giá trị</span><span style="font-size:12px;opacity:.7">Chọn cầu thủ → Áp dụng</span></div>
       <div class="bonus-body">
@@ -331,6 +394,16 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
         <div class="admin-grid">
           
           <div class="admin-card"><h3>Tất cả thành viên</h3><div id="allUsers"></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- DUYỆT ĐỀ XUẤT -->
+    <div class="admin-sect" id="suggApproveSection">
+      <div class="admin-hdr" style="background:#2c3e50">📬 Đề xuất chờ duyệt</div>
+      <div class="admin-body">
+        <div class="admin-grid">
+          <div class="admin-card"><h3>Đề xuất thêm cầu thủ</h3><div id="suggPlayerApprove"></div></div>
+          <div class="admin-card"><h3>Đề xuất thưởng</h3><div id="suggBonusApprove"></div></div>
         </div>
       </div>
     </div>
@@ -424,43 +497,43 @@ window.dispatchEvent(new Event('fbReady'));
 function h(s){let v=0;for(let i=0;i<s.length;i++){v=((v<<5)-v)+s.charCodeAt(i);v|=0}return v.toString(36)}
 
 const BONUSES=[
-  {id:'vdich',   lbl:'Vô địch',                tag:'+20',  type:'val', amt:20,  cls:'',       desc:'Đội vô địch giải đấu — mỗi cầu thủ +20'},
-  {id:'vuabt',   lbl:'Vua bàn thắng',          tag:'+50',  type:'val', amt:50,  cls:'special',desc:'Cầu thủ ghi nhiều bàn nhất +50'},
-  {id:'vuakt',   lbl:'Vua kiến tạo',           tag:'+25',  type:'val', amt:25,  cls:'special',desc:'Cầu thủ kiến tạo nhiều nhất +25'},
-  {id:'cxsnhat', lbl:'Cầu thủ xuất sắc nhất',  tag:'+50',  type:'val', amt:50,  cls:'special',desc:'Cầu thủ xuất sắc nhất mùa giải +50'},
-  {id:'qbv',     lbl:'Quả bóng vàng',          tag:'+50',  type:'qbv', amt:50,  cls:'special',desc:'QBV +50 (giới hạn 3 mùa/cầu thủ)'},
-  {id:'puskas',  lbl:'Puskas',                 tag:'+20',  type:'val', amt:20,  cls:'special',desc:'Bàn thắng đẹp nhất +20'},
-  {id:'hvtm',    lbl:'HV Thủ môn',             tag:'+20',  type:'gk',  amt:20,  cls:'gk',     desc:'Thủ môn cộng +20 mỗi lần tăng chỉ số tổng'},
+  {id:'vdich',   lbl:'Vô địch',                tag:'+20',  type:'val', amt:20,  cls:'',       desc:'Đội vô địch giải đấu — mỗi cầu thủ +20',by:'superadmin'},
+  {id:'vuabt',   lbl:'Vua bàn thắng',          tag:'+50',  type:'val', amt:50,  cls:'special',desc:'Cầu thủ ghi nhiều bàn nhất +50',by:'superadmin'},
+  {id:'vuakt',   lbl:'Vua kiến tạo',           tag:'+25',  type:'val', amt:25,  cls:'special',desc:'Cầu thủ kiến tạo nhiều nhất +25',by:'superadmin'},
+  {id:'cxsnhat', lbl:'Cầu thủ xuất sắc nhất',  tag:'+50',  type:'val', amt:50,  cls:'special',desc:'Cầu thủ xuất sắc nhất mùa giải +50',by:'superadmin'},
+  {id:'qbv',     lbl:'Quả bóng vàng',          tag:'+50',  type:'qbv', amt:50,  cls:'special',desc:'QBV +50 (giới hạn 3 mùa/cầu thủ)',by:'superadmin'},
+  {id:'puskas',  lbl:'Puskas',                 tag:'+20',  type:'val', amt:20,  cls:'special',desc:'Bàn thắng đẹp nhất +20',by:'superadmin'},
+  {id:'hvtm',    lbl:'HV Thủ môn',             tag:'+20',  type:'gk',  amt:20,  cls:'gk',     desc:'Thủ môn cộng +20 mỗi lần tăng chỉ số tổng',by:'superadmin'},
 ];
 
 const INIT=[
-  {id:1, stt:1, so:'09',ten:'TDũng',  doi:'FC Mobile',  rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:2, stt:2, so:'07',ten:'BKhang', doi:'FC Mobile',  rating:3,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:3, stt:3, so:'06',ten:'NPhong', doi:'FC Mobile',  rating:4,val:350, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:4, stt:4, so:'90',ten:'AQuân',  doi:'FC Mobile',  rating:4,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:5, stt:5, so:'25',ten:'ĐQuang', doi:'FC Mobile',  rating:4,val:350, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:6, stt:6, so:'01',ten:'NMinh',  doi:'FC Mobile',  rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:7, stt:7, so:'12',ten:'GBách',  doi:'FC Mobile',  rating:1,val:50,  idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:8, stt:8, so:'02',ten:'MKhang', doi:'FC Mobile',  rating:2,val:75,  idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:27,stt:27,so:'',  ten:'QThắng', doi:'FC Mobile',  rating:4,val:500, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:9, stt:9, so:'06',ten:'TMinh',  doi:'FC Bựa Dâm', rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:10,stt:10,so:'08',ten:'GHưng',  doi:'FC Bựa Dâm', rating:4,val:400, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:11,stt:11,so:'3', ten:'QKhải',  doi:'FC Bựa Dâm', rating:4,val:350, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:12,stt:12,so:'10',ten:'TKhang', doi:'FC Bựa Dâm', rating:3,val:300, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:13,stt:13,so:'23',ten:'Vanh',   doi:'FC Bựa Dâm', rating:3,val:200, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:14,stt:14,so:'5', ten:'MHưng',  doi:'FC Bựa Dâm', rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:15,stt:15,so:'1', ten:'Phiệp',  doi:'FC Bựa Dâm', rating:3,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:16,stt:16,so:'9', ten:'ĐThắng', doi:'FC Bựa Dâm', rating:2,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:17,stt:17,so:'21',ten:'XPhúc',  doi:'FC Bựa Dâm', rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:18,stt:18,so:'',  ten:'SLong',  doi:'FC Sĩ Gái',  rating:4,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:19,stt:19,so:'',  ten:'KNguyên',doi:'FC Sĩ Gái',  rating:4,val:400, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:20,stt:20,so:'',  ten:'AĐức',   doi:'FC Sĩ Gái',  rating:3,val:325, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:21,stt:21,so:'',  ten:'MĐức',   doi:'FC Sĩ Gái',  rating:2,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:22,stt:22,so:'',  ten:'KMinh',  doi:'FC Sĩ Gái',  rating:3,val:325, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:23,stt:23,so:'',  ten:'GBảo',   doi:'FC Sĩ Gái',  rating:4,val:300, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:24,stt:24,so:'',  ten:'MQuang', doi:'FC Sĩ Gái',  rating:5,val:350, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:25,stt:25,so:'',  ten:'KMinh1', doi:'FC Sĩ Gái',  rating:3,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
-  {id:26,stt:26,so:'',  ten:'ĐMinh',  doi:'FC Sĩ Gái',  rating:1,val:50,  idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
+  {id:1, stt:1, so:'09',ten:'TDũng',  doi:'FC Mobile',  rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:2, stt:2, so:'07',ten:'BKhang', doi:'FC Mobile',  rating:3,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:3, stt:3, so:'06',ten:'NPhong', doi:'FC Mobile',  rating:4,val:350, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:4, stt:4, so:'90',ten:'AQuân',  doi:'FC Mobile',  rating:4,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:5, stt:5, so:'25',ten:'ĐQuang', doi:'FC Mobile',  rating:4,val:350, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:6, stt:6, so:'01',ten:'NMinh',  doi:'FC Mobile',  rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:7, stt:7, so:'12',ten:'GBách',  doi:'FC Mobile',  rating:1,val:50,  idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:8, stt:8, so:'02',ten:'MKhang', doi:'FC Mobile',  rating:2,val:75,  idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:27,stt:27,so:'',  ten:'QThắng', doi:'FC Mobile',  rating:4,val:500, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:9, stt:9, so:'06',ten:'TMinh',  doi:'FC Bựa Dâm', rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:10,stt:10,so:'08',ten:'GHưng',  doi:'FC Bựa Dâm', rating:4,val:400, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:11,stt:11,so:'3', ten:'QKhải',  doi:'FC Bựa Dâm', rating:4,val:350, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:12,stt:12,so:'10',ten:'TKhang', doi:'FC Bựa Dâm', rating:3,val:300, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:13,stt:13,so:'23',ten:'Vanh',   doi:'FC Bựa Dâm', rating:3,val:200, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:14,stt:14,so:'5', ten:'MHưng',  doi:'FC Bựa Dâm', rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:15,stt:15,so:'1', ten:'Phiệp',  doi:'FC Bựa Dâm', rating:3,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:16,stt:16,so:'9', ten:'ĐThắng', doi:'FC Bựa Dâm', rating:2,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:17,stt:17,so:'21',ten:'XPhúc',  doi:'FC Bựa Dâm', rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:18,stt:18,so:'',  ten:'SLong',  doi:'FC Sĩ Gái',  rating:4,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:19,stt:19,so:'',  ten:'KNguyên',doi:'FC Sĩ Gái',  rating:4,val:400, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:20,stt:20,so:'',  ten:'AĐức',   doi:'FC Sĩ Gái',  rating:3,val:325, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:21,stt:21,so:'',  ten:'MĐức',   doi:'FC Sĩ Gái',  rating:2,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:22,stt:22,so:'',  ten:'KMinh',  doi:'FC Sĩ Gái',  rating:3,val:325, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:23,stt:23,so:'',  ten:'GBảo',   doi:'FC Sĩ Gái',  rating:4,val:300, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:24,stt:24,so:'',  ten:'MQuang', doi:'FC Sĩ Gái',  rating:5,val:350, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:25,stt:25,so:'',  ten:'KMinh1', doi:'FC Sĩ Gái',  rating:3,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
+  {id:26,stt:26,so:'',  ten:'ĐMinh',  doi:'FC Sĩ Gái',  rating:1,val:50,  idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'},
 ];
 
 const ADMIN_H=h('hanhnguyen110312');
@@ -473,6 +546,8 @@ const VER='v5';
 if(localStorage.getItem('tmV')!==VER){localStorage.removeItem('tmD');localStorage.removeItem('tmBL');localStorage.setItem('tmV',VER)}
 
 let DATA=JSON.parse(localStorage.getItem('tmD')||JSON.stringify(INIT));
+let SUGG=JSON.parse(localStorage.getItem('tmSUGG')||'[]');
+let CUSTOM_BONUSES=JSON.parse(localStorage.getItem('tmCB')||'[]'); // {id,lbl,amt,desc,by,cls} // {id,type,data,by,status,time}
 let BL=JSON.parse(localStorage.getItem('tmBL')||'[]');
 let USERS=initUsers();
 let CU=null, cF='all', cS='val', eId=null, c1=null, c2=null;
@@ -515,9 +590,22 @@ async function loadFromFirebase(){
       BL = fbBL;
       localStorage.setItem('tmBL', JSON.stringify(BL));
     }
+    const [fbSUGG, fbCB] = await Promise.all([
+      fbGet('data/suggestions'),
+      fbGet('data/customBonuses')
+    ]);
+    if(fbCB&&Array.isArray(fbCB)){
+      CUSTOM_BONUSES=fbCB;
+      localStorage.setItem('tmCB',JSON.stringify(CUSTOM_BONUSES));
+    }
+    if(fbSUGG&&Array.isArray(fbSUGG)&&fbSUGG[0]!=='_'){
+      SUGG=fbSUGG;localStorage.setItem('tmSUGG',JSON.stringify(SUGG));
+    }
+
     // Nếu Firebase chưa có data, push data local lên
     if(!fbPlayers){ fbSet('data/players', DATA); }
     if(fbUsers.length===0){ USERS.forEach(u=>fbSetUser(u)); }
+
     if(!fbBL){ fbSet('data/bonusLog', BL); }
   } catch(e){ console.warn('Firebase load error:', e); }
   showLoading(false);
@@ -561,6 +649,8 @@ function sd(){
   fbSet('data/players', DATA);
   fbSet('data/users', USERS);
   fbSet('data/bonusLog', BL);
+  fbSet('data/suggestions', SUGG.length?SUGG:null);
+  fbSet('data/customBonuses', CUSTOM_BONUSES.length?CUSTOM_BONUSES:null);
 }
 
 function stars(r){let s='';for(let i=0;i<r;i++)s+='★';for(let i=r;i<5;i++)s+='☆';return s}
@@ -659,9 +749,14 @@ function showPage(p){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const idx={Market:0,Bonus:1,Admin:2}[p];
   document.querySelectorAll('.nav-item')[idx]?.classList.add('active');
-  if(p==='Market'){rStats();rTable();rCharts()}
+  if(p==='Market'){
+    rStats();rTable();rCharts();
+    const spSect=document.getElementById('suggPlayerSection');
+    if(spSect)spSect.style.display=(CU&&CU.role==='guest')?'block':'none';
+    renderMySugg();
+  }
   if(p==='Bonus'){rBonus()}
-  if(p==='Admin'){rAdmin()}
+  if(p==='Admin'){rAdmin();renderSuggApprove();}
 }
 
 // MARKET
@@ -694,14 +789,19 @@ function rTable(){
     const rk=p.rank<=3?'t'+p.rank:'';
     const rd=p.rank<=3?['🥇','🥈','🥉'][p.rank-1]:p.rank;
     let ce=false;
-    if(CU){if(CU.role==='superadmin'||CU.role==='admin')ce=true;}
+    if(CU){if(CU.role==='superadmin')ce=true;else if(CU.role==='admin'&&p.by!=='superadmin')ce=true;}
     const dis=ce?'':'disabled';
     return '<tr><td class="rnk '+rk+'">'+rd+'</td><td><div class="pcell"><div class="av" style="background:'+tl+';color:'+tdk+';border-color:'+tc+'">'+ini(p.ten)+'</div><div><div class="pname">'+p.ten+'</div><div class="pso">'+( p.so?'#'+p.so:'')+'</div></div></div></td><td><span class="tbadge" style="background:'+tl+';color:'+tdk+'">'+p.doi.replace('FC ','')+'</span></td><td><span class="stars">'+stars(p.rating)+'</span></td><td class="vcell" style="color:'+tc+'">'+p.val.toLocaleString()+' '+sq(9)+'</td><td><input type="number" class="vi" id="vi-'+p.id+'" value="'+p.val+'" '+dis+' onchange="qSave('+p.id+',this)" oninput="this.classList.add(\'changed\')" title="'+(ce?'Nhập giá trị mới':'Không có quyền')+'" style="'+(ce?'':'background:#f0f0f0;color:#bbb;cursor:not-allowed;border-color:#ddd;')+'"></td><td>'+idxB(p)+'</td><td><div class="bar-bg"><div class="bar-fill" style="width:'+bw+'%;background:'+tc+'"></div></div></td><td><button class="edbtn" onclick="openModal('+p.id+')" '+dis+'>Sửa</button></td></tr>';
   }).join('');
 }
 function qSave(id,inp){
   const v=parseInt(inp.value)||0,p=DATA.find(x=>x.id===id);
-  if(p){p.val=v;sd();rStats();rCharts();inp.classList.remove('changed');toast(p.ten+': '+v.toLocaleString()+' '+sq(9),'success')}
+  if(!p)return;
+  if(p.by==='superadmin'&&CU.role==='admin'){
+    inp.value=p.val;inp.classList.remove('changed');
+    toast('Admin không thể sửa cầu thủ của Super Admin!','warn');return;
+  }
+  p.val=v;sd();rStats();rCharts();inp.classList.remove('changed');toast(p.ten+': '+v.toLocaleString()+' '+sq(9),'success');
 }
 function setFilter(f,btn){
   cF=f;
@@ -738,6 +838,9 @@ function saveModal(){
   p.idx.suc=parseInt(document.getElementById('iSuc').value)||0;
   p.idx.ky=parseInt(document.getElementById('iKy').value)||0;
   p.idx.tong=parseInt(document.getElementById('iTong').value)||0;
+  if(p.by==='superadmin'&&CU.role==='admin'){
+    closeModal();toast('Admin không thể sửa cầu thủ của Super Admin!','warn');return;
+  }
   sd();rStats();rTable();rCharts();closeModal();toast('Đã cập nhật '+p.ten,'success');
 }
 function rCharts(){
@@ -752,12 +855,44 @@ function rCharts(){
 
 // BONUS
 function rBonus(){
+  // Hiện/ẩn section đề xuất
+  const suggSect=document.getElementById('suggSection');
+  if(suggSect)suggSect.style.display=(CU&&CU.role==='guest')?'block':'none';
+  // Điền danh sách cầu thủ cho đề xuất
+  const suggPSel=document.getElementById('suggPlayerSel');
+  if(suggPSel)suggPSel.innerHTML=DATA.map(p=>'<option value="'+p.id+'">'+p.ten+' ('+p.doi.replace('FC ','')+')</option>').join('');
+  renderMySugg();
+
   const ok=canE();
   const opts=DATA.map(p=>'<option value="'+p.id+'">'+p.ten+' ('+p.doi.replace('FC ','')+' '+p.val.toLocaleString()+'▪)</option>').join('');
   document.getElementById('bonusNotice').innerHTML=ok?'':'<div style="background:#fef9e7;border:1px solid #f9e79f;padding:10px;border-radius:3px;font-size:12px;color:#7d6608;margin-bottom:12px">Chỉ Admin mới có thể áp dụng thưởng.</div>';
-  document.getElementById('bonusGrid').innerHTML=BONUSES.map(b=>{
+  const allBonuses=[...BONUSES,...CUSTOM_BONUSES];
+  document.getElementById('bonusGrid').innerHTML=allBonuses.map(b=>{
     return '<div class="bcard"><div class="bcard-ttl"><span class="btag '+b.cls+'">'+b.tag+' ▪</span>'+b.lbl+'</div><div class="bdesc">'+b.desc+'</div><div class="brow"><select class="bsel" id="bs-'+b.id+'">'+opts+'</select><button class="bapply" onclick="applyB(\''+b.id+'\')" '+(ok?'':'disabled')+'>Áp dụng</button></div></div>';
   }).join('');
+  // Nút thêm loại thưởng (admin/superadmin)
+  const bgEl=document.getElementById('bonusGrid');
+  if(bgEl&&isAdmin()){
+    bgEl.insertAdjacentHTML('beforeend',`
+      <div class="bcard" style="border:2px dashed #ccc;background:#fafafa;display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:100px" onclick="showAddBonusForm()">
+        <div style="text-align:center;color:#aaa"><div style="font-size:24px">+</div><div style="font-size:12px">Thêm loại thưởng</div></div>
+      </div>
+      <div id="addBonusForm" style="display:none;grid-column:1/-1;border:1px solid var(--tm-border);border-radius:4px;padding:14px;background:#f9f9f9">
+        <div style="font-weight:600;font-size:13px;margin-bottom:10px">Thêm loại thưởng mới</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+          <div><label class="form-label">Tên thưởng</label><input class="form-input" id="cbLbl" placeholder="vd: Hattrick"></div>
+          <div><label class="form-label">Giá trị +</label><input class="form-input" type="number" id="cbAmt" placeholder="30"></div>
+          <div><label class="form-label">Mô tả</label><input class="form-input" id="cbDesc" placeholder="Ghi chú..."></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-save" style="padding:7px 16px;font-size:13px" onclick="addCustomBonus()">Thêm</button>
+          <button class="btn-cancel" style="padding:7px 16px;font-size:13px" onclick="document.getElementById('addBonusForm').style.display='none'">Huỷ</button>
+        </div>
+      </div>
+    `);
+  }
+  // Render danh sách custom bonus có thể xóa
+  renderCustomBonusList();
   rBH();
 }
 function applyB(bid){
@@ -860,7 +995,7 @@ function addPlayer(){
   const rating=parseInt(document.getElementById('nRat').value)||3;
   const newId=Math.max(...DATA.map(p=>p.id))+1;
   const newStt=Math.max(...DATA.map(p=>p.stt))+1;
-  DATA.push({id:newId,stt:newStt,so,ten,doi,rating,val,idx:{toc:0,suc:0,ky:0,tong:0},qbv:0});
+  DATA.push({id:newId,stt:newStt,so,ten,doi,rating,val,idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:'superadmin'});
   sd();document.getElementById('nTen').value='';document.getElementById('nSo').value='';document.getElementById('nVal').value='';
   toast('Đã thêm '+ten,'success');rAdmin();
 }
@@ -870,6 +1005,148 @@ function deletePlayer(){
   if(!confirm('Xoá cầu thủ "'+p.ten+'"?'))return;
   DATA=DATA.filter(x=>x.id!==pid);sd();toast('Đã xoá '+p.ten);rAdmin();
 }
+// ── CUSTOM BONUS FUNCTIONS ──
+function showAddBonusForm(){
+  const f=document.getElementById('addBonusForm');
+  if(f)f.style.display=f.style.display==='none'?'grid':'none';
+}
+function addCustomBonus(){
+  const lbl=document.getElementById('cbLbl').value.trim();
+  const amt=parseInt(document.getElementById('cbAmt').value)||0;
+  const desc=document.getElementById('cbDesc').value.trim();
+  if(!lbl||!amt){toast('Nhập đủ tên và giá trị','warn');return}
+  const id='cb_'+Date.now();
+  CUSTOM_BONUSES.push({id,lbl,amt,tag:'+'+amt,desc,cls:'special',by:CU.role,addedBy:CU.un});
+  localStorage.setItem('tmCB',JSON.stringify(CUSTOM_BONUSES));
+  fbSet('data/customBonuses',CUSTOM_BONUSES);
+  document.getElementById('cbLbl').value='';document.getElementById('cbAmt').value='';document.getElementById('cbDesc').value='';
+  document.getElementById('addBonusForm').style.display='none';
+  toast('Đã thêm loại thưởng: '+lbl,'success');
+  rBonus();
+}
+function deleteCustomBonus(id){
+  const b=CUSTOM_BONUSES.find(x=>x.id===id);
+  if(!b)return;
+  if(b.by==='superadmin'&&CU.role==='admin'){toast('Admin không thể xóa thưởng của Super Admin!','warn');return}
+  if(!confirm('Xoá loại thưởng "'+b.lbl+'"?'))return;
+  CUSTOM_BONUSES=CUSTOM_BONUSES.filter(x=>x.id!==id);
+  localStorage.setItem('tmCB',JSON.stringify(CUSTOM_BONUSES));
+  fbSet('data/customBonuses',CUSTOM_BONUSES);
+  toast('Đã xóa '+b.lbl);rBonus();
+}
+function renderCustomBonusList(){
+  const editable=CUSTOM_BONUSES.filter(b=>b.by!=='superadmin'||isSuperAdmin());
+  if(!editable.length)return;
+  const bgEl=document.getElementById('bonusGrid');
+  if(!bgEl)return;
+  // Thêm nút xóa vào custom bonus cards
+  CUSTOM_BONUSES.forEach(b=>{
+    const canDel=isSuperAdmin()||(CU.role==='admin'&&b.by!=='superadmin');
+    if(canDel){
+      const cards=bgEl.querySelectorAll('.bcard');
+      cards.forEach(card=>{
+        const ttl=card.querySelector('.bcard-ttl');
+        if(ttl&&ttl.textContent.includes(b.lbl)&&!card.querySelector('.del-cb-btn')){
+          const btn=document.createElement('button');
+          btn.className='bsm bsm-del del-cb-btn';
+          btn.style='margin-top:6px;font-size:10px';
+          btn.textContent='Xoá';
+          btn.onclick=()=>deleteCustomBonus(b.id);
+          card.appendChild(btn);
+        }
+      });
+    }
+  });
+}
+
+// ── SUGGESTION FUNCTIONS ──
+function getSugg(){return JSON.parse(localStorage.getItem('tmSUGG')||'[]');}
+function saveSugg(){localStorage.setItem('tmSUGG',JSON.stringify(SUGG));fbSet('data/suggestions',SUGG.length?SUGG:['_']);}
+
+function submitPlayerSugg(){
+  const ten=document.getElementById('spTen').value.trim();
+  if(!ten){toast('Nhập tên cầu thủ','warn');return}
+  const so=document.getElementById('spSo').value.trim();
+  const doi=document.getElementById('spDoi').value;
+  const val=parseInt(document.getElementById('spVal').value)||100;
+  const id='ps_'+Date.now();
+  SUGG.push({id,type:'player',data:{ten,so,doi,val},by:CU.un,status:'pending',time:new Date().toLocaleString('vi-VN')});
+  saveSugg();
+  document.getElementById('spTen').value='';document.getElementById('spSo').value='';document.getElementById('spVal').value='';
+  toast('Đã gửi đề xuất thêm '+ten,'success');
+  renderMySugg();renderSuggApprove();
+}
+
+function submitBonusSugg(){
+  const bonusId=document.getElementById('suggBonusSel').value;
+  const pid=parseInt(document.getElementById('suggPlayerSel').value);
+  const note=document.getElementById('suggNote').value.trim();
+  const p=DATA.find(x=>x.id===pid);
+  const b=BONUSES.find(x=>x.id===bonusId);
+  if(!p||!b)return;
+  const id='bs_'+Date.now();
+  SUGG.push({id,type:'bonus',data:{bonusId,pid,pname:p.ten,bname:b.lbl,amt:b.amt,note},by:CU.un,status:'pending',time:new Date().toLocaleString('vi-VN')});
+  saveSugg();
+  document.getElementById('suggNote').value='';
+  toast('Đã gửi đề xuất thưởng cho '+p.ten,'success');
+  renderMySugg();renderSuggApprove();
+}
+
+function approveSugg(id){
+  const s=SUGG.find(x=>x.id===id);if(!s)return;
+  s.status='approved';
+  if(s.type==='player'){
+    const {ten,so,doi,val}=s.data;
+    const newId=Math.max(...DATA.map(p=>p.id))+1;
+    const newStt=Math.max(...DATA.map(p=>p.stt))+1;
+    DATA.push({id:newId,stt:newStt,so:so||'',ten,doi,rating:3,val,idx:{toc:0,suc:0,ky:0,tong:0},qbv:0,by:CU.role});
+    sd();toast('Đã duyệt thêm cầu thủ '+ten,'success');
+  } else if(s.type==='bonus'){
+    const p=DATA.find(x=>x.id===s.data.pid);
+    if(p){p.val+=s.data.amt;BL.unshift({t:new Date().toLocaleString('vi-VN'),pl:p.ten,bn:s.data.bname+' +'+s.data.amt+' (duyệt đề xuất)',by:CU.un});sd();}
+    toast('Đã duyệt thưởng cho '+s.data.pname,'success');
+  }
+  saveSugg();renderSuggApprove();rStats();rTable();
+}
+
+function rejectSugg(id){
+  const s=SUGG.find(x=>x.id===id);if(!s)return;
+  s.status='rejected';saveSugg();renderSuggApprove();renderMySugg();
+  toast('Đã từ chối đề xuất');
+}
+
+function renderMySugg(){
+  if(!CU)return;
+  const mine=SUGG.filter(s=>s.by===CU.un).slice(-5).reverse();
+  const pEl=document.getElementById('myPlayerSuggList');
+  const bEl=document.getElementById('mySuggList');
+  const html=(arr,type)=>arr.filter(s=>s.type===type).map(s=>`
+    <div class="sugg-item">
+      <span>${s.type==='player'?s.data.ten+' ('+s.data.doi.replace('FC ','')+')':(s.data.pname+' — '+s.data.bname)}</span>
+      <span class="sugg-status ss-${s.status}">${s.status==='pending'?'Chờ':s.status==='approved'?'✅ Duyệt':'❌ Từ chối'}</span>
+    </div>`).join('')||'<div style="font-size:12px;color:#aaa;padding:6px">Chưa có đề xuất nào</div>';
+  if(pEl)pEl.innerHTML=html(mine,'player');
+  if(bEl)bEl.innerHTML=html(mine,'bonus');
+}
+
+function renderSuggApprove(){
+  if(!isAdmin())return;
+  const pending=SUGG.filter(s=>s.status==='pending');
+  const pEl=document.getElementById('suggPlayerApprove');
+  const bEl=document.getElementById('suggBonusApprove');
+  const mkRow=(s)=>`<div class="sugg-item" style="flex-direction:column;align-items:flex-start;gap:6px">
+    <div><b>${s.type==='player'?s.data.ten+' | '+s.data.doi+' | '+s.data.val+'▪':(s.data.pname+' — '+s.data.bname+' +'+s.data.amt+'▪')}</b></div>
+    <div style="font-size:11px;color:#666">Từ: ${s.by} · ${s.time}${s.data?.note?' · '+s.data.note:''}</div>
+    <div style="display:flex;gap:6px">
+      <button class="bsm bsm-ok" onclick="approveSugg('${s.id}')">✅ Duyệt</button>
+      <button class="bsm bsm-del" onclick="rejectSugg('${s.id}')">❌ Từ chối</button>
+    </div>
+  </div>`;
+  const empty='<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Không có đề xuất</div>';
+  if(pEl)pEl.innerHTML=pending.filter(s=>s.type==='player').map(mkRow).join('')||empty;
+  if(bEl)bEl.innerHTML=pending.filter(s=>s.type==='bonus').map(mkRow).join('')||empty;
+}
+
 function exportData(){
   const rows=['STT,Tên,Đội,Số áo,Đánh giá,Giá trị,Tốc,Sức,Kỹ,Tổng'];
   DATA.forEach(p=>rows.push([p.stt,p.ten,p.doi,p.so,p.rating+'/5',p.val,p.idx.toc||0,p.idx.suc||0,p.idx.ky||0,p.idx.tong||0].join(',')));
