@@ -73,6 +73,7 @@ let USERS = initUsers();
 let CU = null;
 let cF = "all";
 let cP = "all";
+let cQ = "";
 let cS = "val";
 let eId = null;
 let c1 = null;
@@ -395,8 +396,14 @@ function showPage(p) {
 }
 
 function getF() {
+  const query = cQ.trim().toLowerCase();
   const filteredByTeam = cF === "all" ? [...DATA] : DATA.filter((p) => p.doi === cF);
-  const d = cP === "all" ? filteredByTeam : filteredByTeam.filter((p) => p.pos === cP);
+  const d = filteredByTeam.filter((p) => {
+    if (cP !== "all" && p.pos !== cP) return false;
+    if (!query) return true;
+    const text = `${p.ten} ${p.doi} ${p.pos} ${p.so}`.toLowerCase();
+    return text.includes(query);
+  });
   if (cS === "val") d.sort((a, b) => b.val - a.val);
   else if (cS === "rating") d.sort((a, b) => b.rating - a.rating);
   else if (cS === "stt") d.sort((a, b) => a.stt - b.stt);
@@ -424,9 +431,10 @@ function rTable() {
   const dc = cF === "all" ? "#e8a317" : TC[cF];
   const labels = [];
   if (cF === "all") labels.push("Tất cả");
-  else labels.push(cF);
+  else labels.push(cF.replace(/^FC\s+/, ""));
   if (cP !== "all") labels.push(cP);
-  const lbl = `${labels.join(" / ")} — ${d.length} cầu thủ`;
+  if (cQ.trim()) labels.push(`"${cQ.trim()}"`);
+  const lbl = `${labels.join(" · ")} — ${d.length} cầu thủ`;
   document.getElementById("secBar").innerHTML = `<span class="sec-dot" style="background:${dc}"></span><span>${lbl}</span>`;
   document.getElementById("tbody").innerHTML = d.map((p) => {
     const tc = TC[p.doi];
@@ -472,6 +480,24 @@ function setPosFilter(p) {
   cP = p;
   const select = document.getElementById("posFilter");
   if (select) select.value = p;
+  rTable();
+}
+
+function setQuery(q) {
+  cQ = q;
+  rTable();
+}
+
+function clearFilters() {
+  cF = "all";
+  cP = "all";
+  cQ = "";
+  document.querySelectorAll(".filter-bar .fb").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".filter-bar .fb")[0]?.classList.add("active");
+  const pos = document.getElementById("posFilter");
+  if (pos) pos.value = "all";
+  const q = document.getElementById("qSearch");
+  if (q) q.value = "";
   rTable();
 }
 
@@ -799,7 +825,7 @@ async function rAdmin() {
     }
   } catch {}
   document.getElementById("adminPageBadge").textContent = isSuperAdmin() ? "SUPER ADMIN" : "ADMIN";
-  document.getElementById("memberMgmtSection").style.display = isSuperAdmin() ? "block" : "none";
+  document.getElementById("memberMgmtSection").style.display = isAdmin() ? "block" : "none";
   const approved = USERS.filter((u) => u.ok);
   const reqAdmin = USERS.filter((u) => u.reqAdmin && u.role === "guest");
   const pendEl = document.getElementById("pendingList");
@@ -946,6 +972,56 @@ async function reqAdminFn() {
   }
 }
 
+function openPasswordModal() {
+  const modal = document.getElementById("pwdModal");
+  if (!modal) return;
+  document.getElementById("pwdMsg").textContent = "";
+  document.getElementById("curPass").value = "";
+  document.getElementById("newPass").value = "";
+  document.getElementById("newPass2").value = "";
+  modal.classList.add("open");
+}
+
+function closePasswordModal() {
+  const modal = document.getElementById("pwdModal");
+  if (modal) modal.classList.remove("open");
+}
+
+function savePassword() {
+  const cur = document.getElementById("curPass").value;
+  const np = document.getElementById("newPass").value;
+  const np2 = document.getElementById("newPass2").value;
+  const msg = document.getElementById("pwdMsg");
+  if (!cur || !np || !np2) {
+    msg.textContent = "Vui lòng điền đầy đủ thông tin";
+    msg.style.color = "#c0392b";
+    return;
+  }
+  if (np.length < 6) {
+    msg.textContent = "Mật khẩu mới phải ít nhất 6 ký tự";
+    msg.style.color = "#c0392b";
+    return;
+  }
+  if (np !== np2) {
+    msg.textContent = "Mật khẩu mới không khớp";
+    msg.style.color = "#c0392b";
+    return;
+  }
+  if (!CU || h(cur) !== CU.h) {
+    msg.textContent = "Mật khẩu hiện tại không đúng";
+    msg.style.color = "#c0392b";
+    return;
+  }
+  CU.h = h(np);
+  const u = USERS.find((x) => x.un === CU.un);
+  if (u) u.h = CU.h;
+  localStorage.setItem("tmU", JSON.stringify(USERS));
+  fbSetUser(u);
+  msg.textContent = "Đổi mật khẩu thành công";
+  msg.style.color = "#27ae60";
+  setTimeout(closePasswordModal, 1200);
+}
+
 document.getElementById("modalOv").addEventListener("click", function onOverlayClick(e) {
   if (e.target === this) closeModal();
 });
@@ -993,6 +1069,9 @@ Object.assign(window, {
   applyB,
   deleteCustomBonus,
   addCustomBonus,
+  setPosFilter,
+  setQuery,
+  clearFilters,
   toggleVdRow,
   closeVdich,
   confirmVdich,
@@ -1002,6 +1081,9 @@ Object.assign(window, {
   rejectAdminReq,
   demU,
   delU,
+  openPasswordModal,
+  closePasswordModal,
+  savePassword,
   addPlayer,
   deletePlayer,
 });

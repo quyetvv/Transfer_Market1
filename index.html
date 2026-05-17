@@ -47,6 +47,7 @@
       <button id="btnReqAdmin" onclick="reqAdminFn()" style="display:none;background:#e8a317;color:#000;border:none;padding:4px 10px;border-radius:3px;font-size:12px;cursor:pointer;font-weight:600">Xin lên Admin</button>
       <span id="hBadge" class="ubadge"></span>
       <span id="hName" style="font-size:12px;color:rgba(255,255,255,.7)"></span>
+      <button class="btn-auth" style="margin-right:8px;font-size:12px;padding:4px 10px" onclick="openPasswordModal()">Đổi mật khẩu</button>
       <button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
     </div>
   </div>
@@ -111,7 +112,15 @@
         <option value="ST">ST</option>
         <option value="CF">CF</option>
       </select>
+      <div class="fsep"></div>
+      <span class="slbl">Tìm kiếm:</span>
+      <input id="qSearch" class="form-input" type="search" placeholder="Tên / Đội / Vị trí" style="width:170px;margin-left:8px" oninput="setQuery(this.value)">
+      <button class="fb" style="padding:5px 9px;background:#f7f7f7;color:#4a4a4a;border-color:#ddd" onclick="clearFilters()">Xóa</button>
     </div>
+    <div class="fsep"></div>
+    <span class="slbl">Tìm kiếm:</span>
+    <input id="qSearch" class="form-input" type="search" placeholder="Tên / Đội / Vị trí" style="width:180px;margin-left:8px" oninput="setQuery(this.value)">
+    <button class="fb" style="padding:5px 9px;background:#f7f7f7;color:#4a4a4a;border-color:#ddd" onclick="clearFilters()">Xóa</button>
     <div class="tbl-wrap">
       <div class="sec-bar" id="secBar"><span class="sec-dot" style="background:var(--ac)"></span><span>Tất cả</span></div>
       <table class="tm-table">
@@ -283,6 +292,19 @@
       </div>
     </div>
     <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">Huỷ</button><button class="btn-save" onclick="saveModal()">Lưu</button></div>
+  </div>
+</div>
+
+<div class="modal-ov" id="pwdModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-hdr"><span class="modal-ttl">Đổi mật khẩu</span><button class="modal-x" onclick="closePasswordModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Mật khẩu hiện tại</label><input type="password" class="form-input" id="curPass" placeholder="Nhập mật khẩu hiện tại"></div>
+      <div class="form-group"><label class="form-label">Mật khẩu mới</label><input type="password" class="form-input" id="newPass" placeholder="Mật khẩu mới (6+ ký tự)"></div>
+      <div class="form-group"><label class="form-label">Xác nhận mật khẩu mới</label><input type="password" class="form-input" id="newPass2" placeholder="Nhập lại mật khẩu mới"></div>
+      <div id="pwdMsg" style="font-size:13px;color:#c0392b;margin-top:10px"></div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closePasswordModal()">Huỷ</button><button class="btn-save" onclick="savePassword()">Lưu mật khẩu</button></div>
   </div>
 </div>
 

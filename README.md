@@ -4,10 +4,11 @@
 
 ## Gợi ý tính năng
 
-- Lọc và tìm kiếm cầu thủ theo đội, vị trí và giá trị.
-- Sắp xếp cầu thủ theo vị trí, giá trị, đánh giá hoặc chỉ số.
+- Lọc và tìm kiếm cầu thủ theo đội, vị trí, số áo và tên.
+- Sắp xếp cầu thủ theo vị trí, giá trị, đánh giá hoặc STT.
 - Quản lý đề xuất thêm cầu thủ và thưởng sau trận.
-- Thêm chức năng so sánh đội hình, đề xuất chuyển nhượng và báo cáo hiệu suất.
+- Quản lý đề xuất nâng quyền admin và cho phép admin duyệt yêu cầu chờ.
+- Thay đổi mật khẩu trực tiếp trong giao diện người dùng.
 - Hỗ trợ xuất dữ liệu CSV và đồng bộ Firebase.
 
 ## Tính năng chính
@@ -19,6 +20,7 @@
 - Quản lý phần thưởng sau trận, thêm thưởng tùy chỉnh và xem lịch sử.
 - Guest gửi đề xuất thêm cầu thủ hoặc đề xuất thưởng.
 - Admin duyệt đề xuất, quản lý cầu thủ và người dùng.
+- Đổi mật khẩu cho tài khoản đang đăng nhập.
 - Xuất dữ liệu cầu thủ ra CSV.
 - Đồng bộ dữ liệu với Firebase Realtime Database.
 
