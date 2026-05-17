@@ -155,6 +155,7 @@ function sd() {
   fbSet("data/customBonuses", CUSTOM_BONUSES.length ? CUSTOM_BONUSES : null);
   fbSet("data/tournaments", TOURNAMENTS.length ? TOURNAMENTS : null);
   fbSet("data/clubFunds", Object.keys(CLUB_FUNDS).length ? CLUB_FUNDS : null);
+  renderClubFundBadge();
 }
 
 async function loadFromFirebase() {
@@ -252,6 +253,41 @@ function ini(n) { return n.substring(0, 2).toUpperCase(); }
 function getClubFunds(team) { return CLUB_FUNDS[team] || 0; }
 function creditClub(team, amount) { if (!team) return; CLUB_FUNDS[team] = Math.max(0, (CLUB_FUNDS[team] || 0) + amount); sd(); }
 function debitClub(team, amount) { if (!team) return; CLUB_FUNDS[team] = Math.max(0, (CLUB_FUNDS[team] || 0) - amount); sd(); }
+function adjustClubFund(team, amount) {
+  if (!isSuperAdmin()) {
+    toast("Chỉ Super Admin mới có thể điều chỉnh quỹ CLB", "warn");
+    return;
+  }
+  if (!team || !Number.isFinite(amount)) return;
+  CLUB_FUNDS[team] = Math.max(0, (CLUB_FUNDS[team] || 0) + amount);
+  sd();
+  const action = amount >= 0 ? "cộng" : "trừ";
+  toast(`Đã ${action} ${Math.abs(amount).toLocaleString()} ▪ cho ${team.replace(/^FC\s+/, "")}`, "success");
+  renderTournamentPage();
+}
+function promptAdjustClubFund(team) {
+  if (!isSuperAdmin()) return;
+  const value = parseInt(prompt(`Nhập số tiền thay đổi cho ${team.replace(/^FC\s+/, "")}:`, "100"), 10);
+  if (Number.isNaN(value)) {
+    toast("Số tiền không hợp lệ", "warn");
+    return;
+  }
+  adjustClubFund(team, value);
+}
+function renderClubFundBadge() {
+  const el = document.getElementById("clubFundBadge");
+  if (!el) return;
+  if (!CU) {
+    el.textContent = "";
+    return;
+  }
+  if (isPresident() && CU.club) {
+    el.textContent = `Quỹ ${CU.club.replace(/^FC\s+/, "")}: ${getClubFunds(CU.club).toLocaleString()} ▪`;
+  } else {
+    const total = TEAMS.reduce((sum, team) => sum + getClubFunds(team), 0);
+    el.textContent = `Quỹ CLB tổng: ${total.toLocaleString()} ▪`;
+  }
+}
 function itot(idx) { return (idx.toc || 0) + (idx.suc || 0) + (idx.ky || 0) + (idx.tong || 0); }
 function sq(s) { return `<span style="display:inline-block;width:${s}px;height:${s}px;background:currentColor;vertical-align:middle;margin-left:1px"></span>`; }
 function esc(s) { return String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;"); }
@@ -425,6 +461,7 @@ function showPage(p) {
   if (p === "Tournament") {
     renderTournamentPage();
   }
+  renderClubFundBadge();
 }
 
 function getF() {
@@ -476,7 +513,7 @@ function rTable() {
     const rk = p.rank <= 3 ? `t${p.rank}` : "";
     const rd = p.rank <= 3 ? ["🥇", "🥈", "🥉"][p.rank - 1] : p.rank;
     const ce = !!CU && (CU.role === "superadmin" || (CU.role === "admin" && p.by !== "superadmin"));
-    const canSell = !!CU && (CU.role === "superadmin" || CU.role === "admin" || CU.role === "president");
+    const canSell = !!CU && (CU.role === "superadmin" || CU.role === "admin" || (CU.role === "president" && CU.club === p.doi));
     const pos = p.pos || "CM";
     const dis = ce ? "" : "disabled";
     const editBtn = ce ? `<button class="edbtn" onclick="openModal(${p.id})">Sửa</button>` : '<span style="font-size:11px;color:#ddd">—</span>';
@@ -1201,7 +1238,11 @@ function renderTournamentPage() {
     if (standingsEl) standingsEl.innerHTML = '';
   }
   if (fundEl) {
-    fundEl.innerHTML = TEAMS.map((team) => `<div class="stat-box" style="flex:1;min-width:160px"><div class="stat-lbl">${esc(team.replace("FC ", ""))}</div><div class="stat-val">${getClubFunds(team).toLocaleString()} ▪</div></div>`).join("");
+    fundEl.innerHTML = TEAMS.map((team) => {
+      const amount = getClubFunds(team);
+      const adjustControls = isSuperAdmin() ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><button class="bsm" onclick="adjustClubFund(${JSON.stringify(team)}, 100)">+100</button><button class="bsm bsm-dg" onclick="adjustClubFund(${JSON.stringify(team)}, -100)">-100</button><button class="bsm" onclick="promptAdjustClubFund(${JSON.stringify(team)})">Tùy chỉnh</button></div>` : "";
+      return `<div class="stat-box" style="flex:1;min-width:180px"><div class="stat-lbl">${esc(team.replace("FC ", ""))}</div><div class="stat-val">${amount.toLocaleString()} ▪</div>${adjustControls}</div>`;
+    }).join("");
   }
 }
 
@@ -1373,7 +1414,11 @@ function deletePlayer() {
 function sellPlayer(id) {
   const p = DATA.find((x) => x.id === id);
   if (!p) return;
-  if (isPresident() && CU.club === p.doi) {
+  if (isPresident()) {
+    if (CU.club !== p.doi) {
+      toast("Chỉ được bán cầu thủ của CLB bạn đang điều hành.", "warn");
+      return;
+    }
     const price = parseInt(prompt(`Nhập giá rao bán cho ${p.ten}`, p.val), 10);
     if (Number.isNaN(price) || price <= 0) {
       toast("Giá rao bán không hợp lệ", "warn");
