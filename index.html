@@ -332,9 +332,6 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
           
           <div class="admin-card"><h3>Tất cả thành viên</h3><div id="allUsers"></div></div>
         </div>
-        <div style="margin-top:12px;padding:10px 14px;background:#fef9e7;border:1px solid #f9e79f;border-radius:3px;font-size:12px;color:#7d6608">
-          Hội viên: tối đa 3 người, mỗi người sửa được giá trị của 3 cầu thủ được phân công.
-        </div>
       </div>
     </div>
     <div class="admin-sect">
@@ -754,7 +751,7 @@ function rCharts(){
 function rBonus(){
   const ok=canE();
   const opts=DATA.map(p=>'<option value="'+p.id+'">'+p.ten+' ('+p.doi.replace('FC ','')+' '+p.val.toLocaleString()+'▪)</option>').join('');
-  document.getElementById('bonusNotice').innerHTML=ok?'':'<div style="background:#fef9e7;border:1px solid #f9e79f;padding:10px;border-radius:3px;font-size:12px;color:#7d6608;margin-bottom:12px">Chỉ Admin và Hội viên mới có thể áp dụng thưởng.</div>';
+  document.getElementById('bonusNotice').innerHTML=ok?'':'<div style="background:#fef9e7;border:1px solid #f9e79f;padding:10px;border-radius:3px;font-size:12px;color:#7d6608;margin-bottom:12px">Chỉ Admin mới có thể áp dụng thưởng.</div>';
   document.getElementById('bonusGrid').innerHTML=BONUSES.map(b=>{
     return '<div class="bcard"><div class="bcard-ttl"><span class="btag '+b.cls+'">'+b.tag+' ▪</span>'+b.lbl+'</div><div class="bdesc">'+b.desc+'</div><div class="brow"><select class="bsel" id="bs-'+b.id+'">'+opts+'</select><button class="bapply" onclick="applyB(\''+b.id+'\')" '+(ok?'':'disabled')+'>Áp dụng</button></div></div>';
   }).join('');
@@ -792,22 +789,27 @@ async function rAdmin(){
       localStorage.setItem('tmU',JSON.stringify(USERS));
     }
   } catch(e){ console.warn('rAdmin load error:',e); }
-  // Ẩn/hiện quản lý thành viên tuỳ quyền
-  const mgmt=document.getElementById('memberMgmtSection');
-  if(mgmt)mgmt.style.display=isSuperAdmin()?'block':'none';
+  // Badge
   const badge=document.getElementById('adminPageBadge');
   if(badge)badge.textContent=isSuperAdmin()?'SUPER ADMIN':'ADMIN';
-  USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
-  const pending=USERS.filter(u=>!u.ok);
-  document.getElementById('pendingList').innerHTML=pending.length?pending.map(u=>'<div class="urow"><span>'+u.un+'</span><div style="display:flex;gap:4px"><button class="bsm bsm-ok" onclick="approveU(\''+u.un+'\')">Duyệt</button><button class="bsm bsm-del" onclick="delU(\''+u.un+'\')">Xoá</button></div></div>').join(''):'<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Không có tài khoản chờ</div>';
+  const mgmt=document.getElementById('memberMgmtSection');
+  if(mgmt)mgmt.style.display=isSuperAdmin()?'block':'none';
+  // Danh sách thành viên
   const approved=USERS.filter(u=>u.ok);
-  document.getElementById('allUsers').innerHTML=approved.map(u=>{
-    const rb='<span class="urole r-'+u.role+'">'+(u.role==='superadmin'?'Super Admin':u.role==='admin'?'Admin':'Guest')+'</span>';
-    const ep=(u.ep||[]).map(id=>{const pl=DATA.find(p=>p.id===id);return pl?pl.ten:'?'}).join(', ');
-    return '<div class="urow"><div><div>'+u.un+' '+rb+'</div>'+(u.role==='member'&&ep?'<div style="font-size:10px;color:#666;margin-top:2px">Sửa: '+ep+'</div>':'')+'</div><div style="display:flex;gap:4px;flex-wrap:wrap">'+(u.un==='vquyetthang'?'<span style="font-size:11px;color:#aaa">Super Admin</span>':(u.role==='guest'&&mCount<3?'<button class="bsm bsm-mb" onclick="promU(\''+u.un+'\')">Hội viên</button>':'')+(u.role==='member'?'<button class="bsm bsm-dg" onclick="demU(\''+u.un+'\')">Guest</button>':'')+( u.un!=='vquyetthang'?'<button class="bsm bsm-del" onclick="delU(\''+u.un+'\')">Xoá</button>':''))+'</div></div>';
-  }).join('');
+  const allEl=document.getElementById('allUsers');
+  if(allEl){
+    allEl.innerHTML=approved.map(u=>{
+      const rb='<span class="urole r-'+u.role+'">'+(u.role==='superadmin'?'Super Admin':u.role==='admin'?'Admin':'Guest')+'</span>';
+      const isSuper=isSuperAdmin();
+      const canMakeAdmin=isSuper&&u.role==='guest'&&u.un!=='vquyetthang';
+      const canDemote=isSuper&&u.role==='admin';
+      const canDel=isSuper&&u.un!=='vquyetthang';
+      return '<div class="urow"><div>'+u.un+' '+rb+'</div><div style="display:flex;gap:4px;flex-wrap:wrap">'+(u.un==='vquyetthang'?'<span style="font-size:11px;color:#aaa">Super Admin</span>':(canMakeAdmin?'<button class="bsm" style="background:#fde8b0;color:#6d3a00;border-color:#e8a317" onclick="makeAdminU(\''+u.un+'\')">→ Admin</button>':'')+(canDemote?'<button class="bsm bsm-dg" onclick="demU(\''+u.un+'\')">→ Guest</button>':'')+(canDel?'<button class="bsm bsm-del" onclick="delU(\''+u.un+'\')">Xoá</button>':''))+'</div></div>';
+    }).join('');
+  }
+  // Dropdown xoá cầu thủ
   const dSel=document.getElementById('delSel');
-  dSel.innerHTML=DATA.map(p=>'<option value="'+p.id+'">'+p.ten+' ('+p.doi.replace('FC ','')+' '+p.val+'▪)</option>').join('');
+  if(dSel)dSel.innerHTML=DATA.map(p=>'<option value="'+p.id+'">'+p.ten+' ('+p.doi.replace('FC ','')+' '+p.val+'▪)</option>').join('');
 }
 function approveU(un){
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
@@ -822,37 +824,15 @@ function delU(un){
   fbSet('users/'+un, null);
   toast('Đã xoá '+un);rAdmin();
 }
-function promU(un){
-  USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
-  const mc=USERS.filter(x=>x.role==='member'&&x.ok).length;
-  if(mc>=3){toast('Đã đủ 3 hội viên!','warn');return}
-  const u=USERS.find(x=>x.un===un);
-  if(u){
-    u.role='member';
-    u.reqMember=false;
-    const ids=DATA.map(p=>p.id).sort(()=>Math.random()-.5).slice(0,3);
-    u.ep=ids;
-    localStorage.setItem('tmU',JSON.stringify(USERS));
-    fbSetUser(u);
-    const names=ids.map(id=>DATA.find(p=>p.id===id)?.ten||'?').join(', ');
-    toast(un+' → Hội viên. Sửa được: '+names,'success');rAdmin();
-  }
-}
 function makeAdminU(un){
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   const u=USERS.find(x=>x.un===un);
-  if(u){u.role='admin';u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));fbSetUser(u);toast(un+' → Admin','success');rAdmin()}
-}
-function rejectReq(un){
-  USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
-  const u=USERS.find(x=>x.un===un);
-  if(u){u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));fbSetUser(u);toast('Đã từ chối yêu cầu của '+un);rAdmin()}
+  if(u){u.role='admin';localStorage.setItem('tmU',JSON.stringify(USERS));fbSetUser(u);toast(un+' → Admin','success');rAdmin()}
 }
 function demU(un){
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   const u=USERS.find(x=>x.un===un);
-  if(u){u.role='guest';u.ep=[];u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));fbSetUser(u);toast(un+' → Guest');rAdmin()}
-}
+  if(u){u.role='guest';localStorage.setItem('tmU',JSON.stringify(USERS));fbSetUser(u);toast(un+' → Guest');rAdmin()}
 }
 function addPlayer(){
   const ten=document.getElementById('nTen').value.trim();
