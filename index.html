@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>Transfer Market — Marusys FC</title>
+<title>Transfer Market — FC 8A1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
   <div class="auth-box">
     <div class="auth-hdr">
       <div class="auth-logo">Transfer<span>Market</span></div>
-      <div class="auth-sub">Marusys FC · Mùa 2025/26</div>
+      <div class="auth-sub">FC 8A1 · Mùa 2025/26</div>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchTab('login')">Đăng nhập</button>
@@ -41,7 +41,7 @@
 <header class="site-header" id="mainApp" style="display:none">
   <div class="hdr-top">
     <div class="logo">Transfer<span>Market</span></div>
-    <div style="font-size:12px;color:rgba(255,255,255,.4);margin-left:4px">Marusys FC</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.4);margin-left:4px">FC 8A1</div>
     <div class="user-pill">
       <button onclick="if(window._fbReady)loadFromFirebase()" title="Đồng bộ" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);padding:4px 8px;border-radius:3px;font-size:13px;cursor:pointer">⟳</button>
       <button id="btnReqAdmin" onclick="reqAdminFn()" style="display:none;background:#e8a317;color:#000;border:none;padding:4px 10px;border-radius:3px;font-size:12px;cursor:pointer;font-weight:600">Xin lên Admin</button>
@@ -93,6 +93,24 @@
       <button class="fb" id="sRat" onclick="setSort('rating',this)">Đánh giá</button>
       <button class="fb" id="sStt" onclick="setSort('stt',this)">STT</button>
       <button class="fb" id="sPos" onclick="setSort('pos',this)">Vị trí</button>
+      <div class="fsep"></div>
+      <span class="slbl">Vị trí:</span>
+      <select class="form-input" id="posFilter" onchange="setPosFilter(this.value)" style="width:110px;margin-left:8px">
+        <option value="all">Tất cả</option>
+        <option value="GK">GK</option>
+        <option value="CB">CB</option>
+        <option value="LB">LB</option>
+        <option value="RB">RB</option>
+        <option value="CDM">CDM</option>
+        <option value="CM">CM</option>
+        <option value="CAM">CAM</option>
+        <option value="LM">LM</option>
+        <option value="RM">RM</option>
+        <option value="LW">LW</option>
+        <option value="RW">RW</option>
+        <option value="ST">ST</option>
+        <option value="CF">CF</option>
+      </select>
     </div>
     <div class="tbl-wrap">
       <div class="sec-bar" id="secBar"><span class="sec-dot" style="background:var(--ac)"></span><span>Tất cả</span></div>

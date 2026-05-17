@@ -1,50 +1,57 @@
 # Transfer Market
 
-Ứng dụng web tĩnh để quản lý thị trường chuyển nhượng nội bộ cho `Marusys FC`, gồm đăng nhập, phân quyền, quản lý cầu thủ, thưởng sau trận và đồng bộ Firebase Realtime Database.
+Ứng dụng web tĩnh để quản lý thị trường chuyển nhượng nội bộ cho `FC 8A1`. Dự án hỗ trợ quản lý cầu thủ, phân quyền người dùng, xử lý phần thưởng và đồng bộ hoá dữ liệu với Firebase.
 
-## Cấu trúc
+## Gợi ý tính năng
 
-- `index.html`: khung giao diện chính.
-- `assets/styles.css`: toàn bộ CSS.
-- `assets/firebase.js`: khởi tạo Firebase và expose API lên `window._fb`.
-- `assets/app.js`: logic ứng dụng, dữ liệu mẫu, render UI, auth, admin, bonus, export CSV.
+- Lọc và tìm kiếm cầu thủ theo đội, vị trí và giá trị.
+- Sắp xếp cầu thủ theo vị trí, giá trị, đánh giá hoặc chỉ số.
+- Quản lý đề xuất thêm cầu thủ và thưởng sau trận.
+- Thêm chức năng so sánh đội hình, đề xuất chuyển nhượng và báo cáo hiệu suất.
+- Hỗ trợ xuất dữ liệu CSV và đồng bộ Firebase.
 
-## Chức năng hiện có
+## Tính năng chính
 
 - Đăng nhập/đăng ký tài khoản.
-- Phân quyền `guest`, `admin`, `superadmin`.
-- Xem, lọc, sắp xếp danh sách cầu thủ.
-- Cập nhật giá trị, vị trí, đánh giá, chỉ số tăng trưởng.
-- Áp dụng thưởng, thêm thưởng tùy chỉnh, xem lịch sử thưởng.
+- Phân quyền người dùng: `guest`, `admin`, `superadmin`.
+- Xem danh sách cầu thủ, lọc, sắp xếp và tìm kiếm.
+- Cập nhật giá trị chuyển nhượng, vị trí, đánh giá và chỉ số phát triển.
+- Quản lý phần thưởng sau trận, thêm thưởng tùy chỉnh và xem lịch sử.
 - Guest gửi đề xuất thêm cầu thủ hoặc đề xuất thưởng.
-- Admin duyệt đề xuất và quản lý người dùng.
+- Admin duyệt đề xuất, quản lý cầu thủ và người dùng.
 - Xuất dữ liệu cầu thủ ra CSV.
 - Đồng bộ dữ liệu với Firebase Realtime Database.
 
+## Cấu trúc dự án
+
+- `index.html` - giao diện chính và điểm vào của ứng dụng.
+- `assets/styles.css` - định nghĩa giao diện và bố cục.
+- `assets/firebase.js` - cấu hình Firebase, khởi tạo và expose API.
+- `assets/app.js` - logic ứng dụng, quản lý dữ liệu, render UI, xác thực, export CSV.
+
 ## Cách chạy
 
-Mở trực tiếp `index.html` trong trình duyệt. Vì dự án dùng CDN cho Firebase và Chart.js, máy cần có kết nối mạng.
-
-Nếu muốn chạy ổn định hơn trong môi trường local server, có thể dùng một HTTP server tĩnh bất kỳ, ví dụ:
+1. Mở `index.html` trực tiếp trong trình duyệt.
+2. Nếu muốn chạy bằng local server, dùng lệnh:
 
 ```powershell
 python -m http.server 8000
 ```
 
-Sau đó truy cập `http://localhost:8000`.
+3. Truy cập `http://localhost:8000`.
 
-## Rà soát và lỗi đã xử lý
+> Lưu ý: dự án dùng CDN cho Firebase và có thể cần kết nối Internet để hoạt động đầy đủ.
 
-- Tách file khỏi mô hình `single-file` để dễ bảo trì.
-- Chuẩn hóa lại nội dung tiếng Việt bị lỗi mã hóa trong file cũ.
-- Sửa các chuỗi HTML động bị sai dấu nháy trong phần render nút và danh sách động.
-- Sửa export CSV bị xuống dòng sai trong JavaScript.
-- Sửa bug modal vô địch: click checkbox trước đây có thể bị toggle ngược trạng thái.
-- Tăng version local cache từ `v7` lên `v8` để tránh dùng dữ liệu cũ không tương thích.
+## Hướng phát triển tiếp
 
-## Lưu ý kỹ thuật
+- Tách phần xác thực và phân quyền ra backend an toàn hơn.
+- Chuyển cấu hình Firebase sang biến môi trường hoặc backend.
+- Thêm kiểm thử tự động cho logic JavaScript.
+- Xây dựng hệ thống API/Firestore đầy đủ thay vì chỉ dùng localStorage.
+- Cải thiện responsive và giao diện mobile.
 
-- Phân quyền và xác thực đang xử lý phía client, không an toàn cho môi trường production.
-- Firebase config hiện được nhúng trực tiếp ở frontend.
-- Chưa có test tự động.
-- Dữ liệu vẫn phụ thuộc `localStorage` và đồng bộ mềm sang Firebase.
+## Ghi chú kỹ thuật
+
+- Hiện tại phân quyền và auth được xử lý ở client.
+- Dữ liệu chính được lưu tạm vào `localStorage` và đồng bộ mềm sang Firebase.
+- Không có test tự động trong repo hiện tại.
