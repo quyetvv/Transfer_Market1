@@ -56,30 +56,36 @@
   </div>
   <nav class="hdr-nav">
     <div class="nav-item active" onclick="showPage('Market')">Thị trường</div>
+    <div class="nav-item" onclick="showPage('Transfer')">Chuyển nhượng</div>
     <div class="nav-item" onclick="showPage('Tournament')">Giải đấu</div>
     <div class="nav-item" onclick="showPage('Bonus')">Thưởng sau trận</div>
     <div class="nav-item" id="navAdmin" style="display:none" onclick="showPage('Admin')">Admin</div>
   </nav>
 </header>
-
-<div class="container" id="appCont" style="display:none">
-  <div id="pageMarket">
+  <div id="pageTransfer" style="display:none">
     <div class="page-title-bar">
-      <h1>Thị trường chuyển nhượng</h1>
-      <span class="pbadge">Mùa 2025/26</span>
-      <div style="margin-left:auto"><button class="btn-cancel" onclick="exportData()" style="font-size:12px;padding:5px 11px">Xuất CSV</button></div>
+      <h1>Chuyển nhượng</h1>
+      <span class="pbadge">Mua/Bán</span>
     </div>
-    <div class="stats-row" id="statsRow"></div>
-    <div class="sugg-sect" id="suggPlayerSection" style="display:none">
-      <div class="sugg-hdr">💡 Đề xuất thêm cầu thủ mới</div>
-      <div class="sugg-body">
-        <div class="sugg-note">Điền thông tin và gửi đề xuất — Admin sẽ xem xét và duyệt.</div>
-        <div class="sugg-form">
-          <div class="form-group" style="margin:0"><label class="form-label">Tên cầu thủ</label><input class="form-input" id="spTen" placeholder="Tên"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">Số áo</label><input class="form-input" id="spSo" placeholder="Số áo"></div>
+    <div class="admin-sect">
+      <div class="admin-hdr">Yêu cầu mua/bán cầu thủ</div>
+      <div class="admin-body">
+        <div class="form-note" id="purchaseNoteHeader" style="margin-bottom:12px;color:#444;font-size:13px">Chỉ Chủ tịch CLB hoặc Admin mới xem/form giao dịch mua/bán.</div>
+        <div id="purchaseRequestSection">
+          <div class="form-row" style="margin-bottom:10px">
+            <div class="form-group" style="margin:0"><label class="form-label">Chọn cầu thủ</label><select class="form-input" id="purchasePlayerSel"></select></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Mua vào CLB</label><select class="form-input" id="purchaseBuyerClub"></select></div>
+          </div>
+          <div class="form-row" style="margin-bottom:10px">
+            <div class="form-group" style="margin:0"><label class="form-label">Giá đề nghị</label><input class="form-input" id="purchaseOffer" type="number" placeholder="100"></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Ghi chú</label><input class="form-input" id="purchaseNote" placeholder="Lý do..." /></div>
+          </div>
+          <button class="btn-save" onclick="submitPurchaseRequest()">Gửi yêu cầu mua</button>
         </div>
-        <div class="sugg-form">
-          <div class="form-group" style="margin:0"><label class="form-label">Đội</label><select class="form-input" id="spDoi"><option>FC Mobile</option><option>FC Bựa Dâm</option><option>FC Sĩ Gái</option></select></div>
+        <div class="admin-card" style="margin-top:16px"><h3>Yêu cầu mua/bán của bạn</h3><div id="myPurchaseSuggList"></div></div>
+      </div>
+    </div>
+  </div>
           <div class="form-group" style="margin:0"><label class="form-label">Giá trị đề xuất</label><input class="form-input" id="spVal" type="number" placeholder="100"></div>
         </div>
         <button class="btn-save" onclick="submitPlayerSugg()" style="font-size:13px;padding:8px 16px">Gửi đề xuất</button>
@@ -153,56 +159,8 @@
         <div style="position:relative;width:100%;height:290px"><canvas id="c2"></canvas></div>
       </div>
     </div>
-    <div class="admin-sect">
-      <div class="admin-hdr">Yêu cầu mua/bán cầu thủ</div>
-      <div class="admin-body">
-        <div class="form-note" id="purchaseNoteHeader" style="margin-bottom:12px;color:#444;font-size:13px">Chỉ Chủ tịch CLB hoặc Admin mới xem/form giao dịch mua/bán.</div>
-        <div id="purchaseRequestSection" style="display:none">
-          <div class="form-row" style="margin-bottom:10px">
-            <div class="form-group" style="margin:0"><label class="form-label">Chọn cầu thủ</label><select class="form-input" id="purchasePlayerSel"></select></div>
-            <div class="form-group" style="margin:0"><label class="form-label">Mua vào CLB</label><select class="form-input" id="purchaseBuyerClub"></select></div>
-          </div>
-          <div class="form-row" style="margin-bottom:10px">
-            <div class="form-group" style="margin:0"><label class="form-label">Giá đề nghị</label><input class="form-input" id="purchaseOffer" type="number" placeholder="100"></div>
-            <div class="form-group" style="margin:0"><label class="form-label">Ghi chú</label><input class="form-input" id="purchaseNote" placeholder="Lý do..." /></div>
-          </div>
-          <button class="btn-save" onclick="submitPurchaseRequest()">Gửi yêu cầu mua</button>
-        </div>
-        <div class="admin-card" style="margin-top:16px"><h3>Yêu cầu mua/bán của bạn</h3><div id="myPurchaseSuggList"></div></div>
-      </div>
-    </div>
-    <div class="admin-sect" id="marketTournamentSection">
-      <div class="admin-hdr">Giải đấu</div>
-      <div class="admin-body">
-        <div id="tournamentNotice" style="font-size:12px;color:#666;margin-bottom:12px">Tất cả người dùng có thể xem danh sách giải đấu. Chỉ Admin/Super Admin mới có thể tạo, xóa giải.</div>
-        <div id="tournamentControls" style="display:none;margin-bottom:12px">
-          <div class="form-row" style="margin-bottom:10px">
-            <div class="form-group" style="margin:0"><label class="form-label">Tên giải</label><input class="form-input" id="tName" placeholder="Tên giải"></div>
-            <div class="form-group" style="margin:0"><label class="form-label">Mùa giải</label><input class="form-input" id="tSeason" placeholder="2025/26"></div>
-          </div>
-          <div class="form-row" style="margin-bottom:10px">
-            <div class="form-group" style="margin:0"><label class="form-label">Ngày bắt đầu</label><input class="form-input" id="tStart" type="date"></div>
-            <div class="form-group" style="margin:0"><label class="form-label">Ngày kết thúc</label><input class="form-input" id="tEnd" type="date"></div>
-          </div>
-          <button class="btn-save" onclick="addTournament()">Tạo giải</button>
-        </div>
-        <div id="marketTournamentList"></div>
-      </div>
-    </div>
-    <div class="admin-sect" id="purchaseRequestSection" style="display:none">
-      <div class="admin-hdr">Yêu cầu mua cầu thủ</div>
-      <div class="admin-body">
-        <div class="form-row" style="margin-bottom:10px">
-          <div class="form-group" style="margin:0"><label class="form-label">Chọn cầu thủ</label><select class="form-input" id="purchasePlayerSel"></select></div>
-          <div class="form-group" style="margin:0"><label class="form-label">Mua cho CLB</label><select class="form-input" id="purchaseBuyerClub"></select></div>
-        </div>
-        <div class="form-row" style="margin-bottom:10px">
-          <div class="form-group" style="margin:0"><label class="form-label">Giá đề nghị</label><input class="form-input" id="purchaseOffer" type="number" placeholder="100"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">Ghi chú</label><input class="form-input" id="purchaseNote" placeholder="Lý do..." /></div>
-        </div>
-        <button class="btn-save" onclick="submitPurchaseRequest()">Gửi yêu cầu</button>
-      </div>
-    </div>
+    
+    
   </div>
 
   <div id="pageTournament" style="display:none">

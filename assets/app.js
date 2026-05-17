@@ -1240,7 +1240,8 @@ function renderTournamentPage() {
   if (fundEl) {
     fundEl.innerHTML = TEAMS.map((team) => {
       const amount = getClubFunds(team);
-      const adjustControls = isSuperAdmin() ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><button class="bsm" onclick="adjustClubFund(${JSON.stringify(team)}, 100)">+100</button><button class="bsm bsm-dg" onclick="adjustClubFund(${JSON.stringify(team)}, -100)">-100</button><button class="bsm" onclick="promptAdjustClubFund(${JSON.stringify(team)})">Tùy chỉnh</button></div>` : "";
+      const safeTeam = esc(team);
+      const adjustControls = isSuperAdmin() ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><button class="bsm" onclick="adjustClubFund('${safeTeam}', 100)">+100</button><button class="bsm bsm-dg" onclick="adjustClubFund('${safeTeam}', -100)">-100</button><button class="bsm" onclick="promptAdjustClubFund('${safeTeam}')">Tùy chỉnh</button></div>` : "";
       return `<div class="stat-box" style="flex:1;min-width:180px"><div class="stat-lbl">${esc(team.replace("FC ", ""))}</div><div class="stat-val">${amount.toLocaleString()} ▪</div>${adjustControls}</div>`;
     }).join("");
   }
