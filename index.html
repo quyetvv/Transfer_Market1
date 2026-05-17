@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Transfer Market — Marusys FC</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -32,7 +32,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
 .form-label{font-size:11px;font-weight:700;color:var(--tm-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block}
 .form-input{width:100%;padding:10px 12px;border:1px solid var(--tm-border);border-radius:4px;font-size:14px;font-family:'Source Sans 3',sans-serif;color:var(--tm-text);transition:border-color .2s}
 .form-input:focus{outline:none;border-color:var(--tm-green);box-shadow:0 0 0 3px rgba(26,82,118,.1)}
-.btn-auth{width:100%;padding:11px;background:var(--tm-green);color:#fff;border:none;border-radius:4px;font-family:'Oswald',sans-serif;font-size:15px;font-weight:500;letter-spacing:.5px;cursor:pointer;transition:background .15s;margin-top:4px}
+.btn-auth{width:100%;padding:13px;background:var(--tm-green);color:#fff;border:none;border-radius:4px;font-family:'Oswald',sans-serif;font-size:15px;font-weight:500;letter-spacing:.5px;cursor:pointer;transition:background .15s;margin-top:4px}
 .btn-auth:hover{background:var(--tm-green-l)}
 .auth-msg{font-size:12px;margin-top:10px;padding:8px 12px;border-radius:3px;text-align:center}
 .auth-msg.err{background:#fadbd8;color:#922b21}.auth-msg.ok{background:#d5f5e3;color:#1e8449}
@@ -108,7 +108,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
 .brow{display:flex;gap:6px;align-items:center}
 .bsel{flex:1;padding:5px 8px;border:1px solid var(--tm-border);border-radius:3px;font-size:12px;font-family:'Source Sans 3',sans-serif}
 .bsel:focus{outline:none;border-color:var(--tm-green)}
-.bapply{padding:5px 12px;background:var(--tm-green);color:#fff;border:none;border-radius:3px;font-size:12px;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-weight:600;white-space:nowrap}
+.bapply{padding:8px 14px;background:var(--tm-green);color:#fff;border:none;border-radius:3px;font-size:12px;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-weight:600;white-space:nowrap}
 .bapply:hover:not(:disabled){background:var(--tm-green-l)}.bapply:disabled{background:#ccc;cursor:not-allowed}
 .hist-item{padding:4px 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px dashed #f0f0f0;font-size:12px}
 .hist-item:last-child{border-bottom:none}
@@ -160,6 +160,62 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
 .toast{position:fixed;bottom:24px;right:24px;background:#1a5276;color:#fff;padding:12px 20px;border-radius:4px;font-size:13px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9000;transform:translateY(100px);opacity:0;transition:all .3s cubic-bezier(.175,.885,.32,1.1);max-width:320px}
 .toast.show{transform:translateY(0);opacity:1}.toast.success{background:#27ae60}.toast.warn{background:#e8a317;color:#000}
 @media(max-width:700px){.stats-row{grid-template-columns:repeat(2,1fr)}.admin-grid{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}}
+
+/* ── MOBILE RESPONSIVE ── */
+@media(max-width:768px){
+  .hdr-top{padding:8px 12px;gap:8px;flex-wrap:wrap}
+  .logo{font-size:17px}
+  .user-pill{gap:5px;flex-wrap:wrap}
+  .ubadge{font-size:10px;padding:3px 7px}
+  .btn-logout{font-size:11px;padding:3px 7px}
+  #hName{font-size:11px}
+  .hdr-nav{padding:0 12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .nav-item{padding:6px 12px;font-size:11px;white-space:nowrap}
+  .container{padding:10px 10px}
+  .page-title-bar{padding:8px 12px;flex-wrap:wrap;gap:6px}
+  .page-title-bar h1{font-size:15px}
+  .stats-row{grid-template-columns:repeat(2,1fr);gap:8px}
+  .stat-val{font-size:17px}
+  .filter-bar{padding:8px 10px;gap:6px}
+  .fb{font-size:11px;padding:4px 9px}
+  .fsep{display:none}
+  .slbl{display:none}
+  /* TABLE: scroll ngang trên mobile */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:2px}
+  .tm-table{min-width:600px;font-size:12px}
+  .tm-table th{padding:8px 7px;font-size:11px}
+  .tm-table td{padding:7px 7px}
+  .av{width:30px;height:30px;font-size:11px}
+  .pname{font-size:12px}
+  .pso{font-size:10px}
+  .vcell{font-size:12px}
+  .vi{width:68px;font-size:12px;padding:3px 5px}
+  /* BONUS */
+  .bonus-grid{grid-template-columns:1fr}
+  .bcard{padding:10px}
+  /* ADMIN */
+  .admin-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  /* MODAL */
+  .modal{max-width:100%;margin:0 10px}
+  .modal-body{padding:14px}
+  .form-row{grid-template-columns:1fr}
+  /* AUTH */
+  .auth-box{max-width:100%}
+  /* CHART */
+  .chart-body{padding:10px}
+}
+@media(max-width:480px){
+  .stats-row{grid-template-columns:1fr 1fr}
+  .stat-val{font-size:15px}
+  .logo{font-size:15px}
+  .hdr-top{padding:6px 10px}
+  /* Ẩn cột ít quan trọng trên màn hình nhỏ */
+  .tm-table th:nth-child(7),
+  .tm-table td:nth-child(7),
+  .tm-table th:nth-child(8),
+  .tm-table td:nth-child(8){display:none}
+}
 </style>
 </head>
 <body>
@@ -201,7 +257,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
     <div class="user-pill">
       <span id="hBadge" class="ubadge"></span>
       <span id="hName" style="font-size:12px;color:rgba(255,255,255,.7)"></span>
-      <button onclick="if(window._fbReady)loadFromFirebase()" title="Đồng bộ Firebase" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);padding:4px 8px;border-radius:3px;font-size:13px;cursor:pointer" id="btnSync">⟳</button><button id="btnReqMember" onclick="reqMemberFn()" style="display:none;background:#e8a317;color:#000;border:none;padding:4px 10px;border-radius:3px;font-size:12px;cursor:pointer;font-weight:600">Xin lên Hội viên</button><button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
+      <button onclick="if(window._fbReady)loadFromFirebase()" title="Đồng bộ Firebase" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);padding:4px 8px;border-radius:3px;font-size:13px;cursor:pointer" id="btnSync">⟳</button><button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
     </div>
   </div>
   <nav class="hdr-nav">
@@ -273,7 +329,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
       <div class="admin-hdr">Quản lý tài khoản</div>
       <div class="admin-body">
         <div class="admin-grid">
-          <div class="admin-card"><h3>Guest xin lên Hội viên</h3><div id="pendingList"><div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Chưa có yêu cầu</div></div></div>
+          
           <div class="admin-card"><h3>Tất cả thành viên</h3><div id="allUsers"></div></div>
         </div>
         <div style="margin-top:12px;padding:10px 14px;background:#fef9e7;border:1px solid #f9e79f;border-radius:3px;font-size:12px;color:#7d6608">
@@ -520,7 +576,7 @@ function idxB(p){
 }
 function sq(s){return '<span style="display:inline-block;width:'+s+'px;height:'+s+'px;background:currentColor;vertical-align:middle;margin-left:1px"></span>'}
 function toast(msg,t=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800)}
-function canE(){return CU&&(CU.role==='superadmin'||CU.role==='admin'||CU.role==='member')}
+function canE(){return CU&&(CU.role==='superadmin'||CU.role==='admin')}
 function isSuperAdmin(){return CU&&CU.role==='superadmin'}
 function isAdmin(){return CU&&(CU.role==='admin'||CU.role==='superadmin')}
 
@@ -585,12 +641,11 @@ function enterApp(){
   document.getElementById('mainApp').style.display='block';
   document.getElementById('appCont').style.display='block';
   const b=document.getElementById('hBadge');
-  b.textContent=CU.role==='superadmin'?'SUPER ADMIN':CU.role==='admin'?'Admin':CU.role==='member'?'Hội viên':'Guest';
-  b.className='ubadge '+(CU.role==='superadmin'?'admin':CU.role==='admin'?'admin':CU.role==='member'?'member':'guest');
+  b.textContent=CU.role==='superadmin'?'SUPER ADMIN':CU.role==='admin'?'Admin':'Guest';
+  b.className='ubadge '+(CU.role==='superadmin'?'admin':CU.role==='admin'?'admin':'guest');
   document.getElementById('hName').textContent=CU.un;
   document.getElementById('navAdmin').style.display=isAdmin()?'block':'none';
-  document.getElementById('btnReqMember').style.display=(CU.role==='guest')?'block':'none';
-  updateReqBtn();
+  
   showPage('Market');
   // Sync Firebase mỗi khi vào app
   if(window._fbReady){ loadFromFirebase(); }
@@ -639,7 +694,7 @@ function rTable(){
     const rk=p.rank<=3?'t'+p.rank:'';
     const rd=p.rank<=3?['🥇','🥈','🥉'][p.rank-1]:p.rank;
     let ce=false;
-    if(CU){if(CU.role==='superadmin'||CU.role==='admin')ce=true;else if(CU.role==='member'&&(CU.ep||[]).map(String).includes(String(p.id)))ce=true;}
+    if(CU){if(CU.role==='superadmin'||CU.role==='admin')ce=true;}
     const dis=ce?'':'disabled';
     return '<tr><td class="rnk '+rk+'">'+rd+'</td><td><div class="pcell"><div class="av" style="background:'+tl+';color:'+tdk+';border-color:'+tc+'">'+ini(p.ten)+'</div><div><div class="pname">'+p.ten+'</div><div class="pso">'+( p.so?'#'+p.so:'')+'</div></div></div></td><td><span class="tbadge" style="background:'+tl+';color:'+tdk+'">'+p.doi.replace('FC ','')+'</span></td><td><span class="stars">'+stars(p.rating)+'</span></td><td class="vcell" style="color:'+tc+'">'+p.val.toLocaleString()+' '+sq(9)+'</td><td><input type="number" class="vi" id="vi-'+p.id+'" value="'+p.val+'" '+dis+' onchange="qSave('+p.id+',this)" oninput="this.classList.add(\'changed\')" title="'+(ce?'Nhập giá trị mới':'Không có quyền')+'" style="'+(ce?'':'background:#f0f0f0;color:#bbb;cursor:not-allowed;border-color:#ddd;')+'"></td><td>'+idxB(p)+'</td><td><div class="bar-bg"><div class="bar-fill" style="width:'+bw+'%;background:'+tc+'"></div></div></td><td><button class="edbtn" onclick="openModal('+p.id+')" '+dis+'>Sửa</button></td></tr>';
   }).join('');
@@ -746,9 +801,8 @@ async function rAdmin(){
   const pending=USERS.filter(u=>!u.ok);
   document.getElementById('pendingList').innerHTML=pending.length?pending.map(u=>'<div class="urow"><span>'+u.un+'</span><div style="display:flex;gap:4px"><button class="bsm bsm-ok" onclick="approveU(\''+u.un+'\')">Duyệt</button><button class="bsm bsm-del" onclick="delU(\''+u.un+'\')">Xoá</button></div></div>').join(''):'<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Không có tài khoản chờ</div>';
   const approved=USERS.filter(u=>u.ok);
-  const mCount=approved.filter(u=>u.role==='member').length;
   document.getElementById('allUsers').innerHTML=approved.map(u=>{
-    const rb='<span class="urole r-'+u.role+'">'+(u.role==='superadmin'?'Super Admin':u.role==='admin'?'Admin':u.role==='member'?'Hội viên':'Guest')+'</span>';
+    const rb='<span class="urole r-'+u.role+'">'+(u.role==='superadmin'?'Super Admin':u.role==='admin'?'Admin':'Guest')+'</span>';
     const ep=(u.ep||[]).map(id=>{const pl=DATA.find(p=>p.id===id);return pl?pl.ten:'?'}).join(', ');
     return '<div class="urow"><div><div>'+u.un+' '+rb+'</div>'+(u.role==='member'&&ep?'<div style="font-size:10px;color:#666;margin-top:2px">Sửa: '+ep+'</div>':'')+'</div><div style="display:flex;gap:4px;flex-wrap:wrap">'+(u.un==='vquyetthang'?'<span style="font-size:11px;color:#aaa">Super Admin</span>':(u.role==='guest'&&mCount<3?'<button class="bsm bsm-mb" onclick="promU(\''+u.un+'\')">Hội viên</button>':'')+(u.role==='member'?'<button class="bsm bsm-dg" onclick="demU(\''+u.un+'\')">Guest</button>':'')+( u.un!=='vquyetthang'?'<button class="bsm bsm-del" onclick="delU(\''+u.un+'\')">Xoá</button>':''))+'</div></div>';
   }).join('');
@@ -799,18 +853,6 @@ function demU(un){
   const u=USERS.find(x=>x.un===un);
   if(u){u.role='guest';u.ep=[];u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));fbSetUser(u);toast(un+' → Guest');rAdmin()}
 }
-function updateReqBtn(){
-  USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
-  const u=USERS.find(x=>x.un===CU?.un);
-  const btn=document.getElementById('btnReqMember');
-  if(!btn)return;
-  if(u&&u.reqMember){btn.textContent='Đang chờ duyệt...';btn.disabled=true;btn.style.opacity='.6';}
-  else{btn.textContent='Xin lên Hội viên';btn.disabled=false;btn.style.opacity='1';}
-}
-function reqMemberFn(){
-  USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
-  const u=USERS.find(x=>x.un===CU?.un);
-  if(u){u.reqMember=true;localStorage.setItem('tmU',JSON.stringify(USERS));fbSetUser(u);updateReqBtn();toast('Đã gửi yêu cầu lên Hội viên đến admin!','success')}
 }
 function addPlayer(){
   const ten=document.getElementById('nTen').value.trim();
