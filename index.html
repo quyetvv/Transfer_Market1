@@ -404,7 +404,14 @@ let CU=null, cF='all', cS='val', eId=null, c1=null, c2=null;
  
 function initUsers(){
   let us=JSON.parse(localStorage.getItem('tmU')||'[]');
-  if(!us.find(u=>u.un==='vquyetthang'))us.push({un:'vquyetthang',h:ADMIN_H,role:'superadmin',ok:true,ep:[]});
+  const vq=us.find(u=>u.un==='vquyetthang');
+  if(!vq){
+    us.push({un:'vquyetthang',h:ADMIN_H,role:'superadmin',ok:true,ep:[]});
+  } else {
+    // Luôn đảm bảo vquyetthang là superadmin dù localStorage có gì
+    vq.role='superadmin';
+    vq.ok=true;
+  }
   localStorage.setItem('tmU',JSON.stringify(us));
   return us;
 }
@@ -438,6 +445,8 @@ function doLogin(){
   const usr=USERS.find(x=>x.un===u&&x.h===h(p));
   if(!usr){m.innerHTML='<div class="auth-msg err">Sai tên đăng nhập hoặc mật khẩu</div>';return}
   // ok always true now - no admin approval needed for login
+  // Luôn đảm bảo vquyetthang là superadmin
+  if(usr.un==='vquyetthang')usr.role='superadmin';
   CU=usr;enterApp();
 }
 function doRegister(){
@@ -457,12 +466,15 @@ function doRegister(){
 }
 function doLogout(){
   CU=null;
+  sessionStorage.removeItem('tmSession');
   document.getElementById('authScreen').style.display='flex';
   document.getElementById('mainApp').style.display='none';
   document.getElementById('appCont').style.display='none';
   document.getElementById('lUser').value='';document.getElementById('lPass').value='';document.getElementById('lMsg').innerHTML='';
 }
 function enterApp(){
+  // Lưu session để refresh không cần đăng nhập lại
+  sessionStorage.setItem('tmSession', CU.un);
   document.getElementById('authScreen').style.display='none';
   document.getElementById('mainApp').style.display='block';
   document.getElementById('appCont').style.display='block';
@@ -704,6 +716,18 @@ function exportData(){
 }
 document.getElementById('modalOv').addEventListener('click',function(e){if(e.target===this)closeModal()});
 document.getElementById('lPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+ 
+// Auto-restore session khi refresh trang
+(function restoreSession(){
+  const savedUn = sessionStorage.getItem('tmSession');
+  if(!savedUn) return;
+  USERS = JSON.parse(localStorage.getItem('tmU')||'[]');
+  const usr = USERS.find(x=>x.un===savedUn && x.ok);
+  if(!usr) return;
+  if(usr.un==='vquyetthang') usr.role='superadmin';
+  CU = usr;
+  enterApp();
+})();
 </script>
 </body>
 </html>
