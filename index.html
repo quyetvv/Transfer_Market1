@@ -192,7 +192,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
     </div>
   </div>
 </div>
- 
+
 <!-- APP HEADER -->
 <header class="site-header" id="mainApp" style="display:none">
   <div class="hdr-top">
@@ -201,7 +201,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
     <div class="user-pill">
       <span id="hBadge" class="ubadge"></span>
       <span id="hName" style="font-size:12px;color:rgba(255,255,255,.7)"></span>
-      <button id="btnReqMember" onclick="reqMemberFn()" style="display:none;background:#e8a317;color:#000;border:none;padding:4px 10px;border-radius:3px;font-size:12px;cursor:pointer;font-weight:600">Xin lên Hội viên</button><button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
+      <button onclick="if(window._fbReady)loadFromFirebase()" title="Đồng bộ Firebase" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);padding:4px 8px;border-radius:3px;font-size:13px;cursor:pointer" id="btnSync">⟳</button><button id="btnReqMember" onclick="reqMemberFn()" style="display:none;background:#e8a317;color:#000;border:none;padding:4px 10px;border-radius:3px;font-size:12px;cursor:pointer;font-weight:600">Xin lên Hội viên</button><button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
     </div>
   </div>
   <nav class="hdr-nav">
@@ -210,7 +210,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
     <div class="nav-item" id="navAdmin" style="display:none" onclick="showPage('Admin')">Admin</div>
   </nav>
 </header>
- 
+
 <div class="container" id="appCont" style="display:none">
   <!-- MARKET -->
   <div id="pageMarket">
@@ -251,7 +251,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
       </div>
     </div>
   </div>
- 
+
   <!-- BONUS -->
   <div id="pageBonus" style="display:none">
     <div class="page-title-bar"><h1>Thưởng chỉ số sau trận đấu</h1><span class="pbadge">Live</span></div>
@@ -265,7 +265,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
       </div>
     </div>
   </div>
- 
+
   <!-- ADMIN -->
   <div id="pageAdmin" style="display:none">
     <div class="page-title-bar" style="background:#7d1b1b"><h1>Bảng điều khiển Admin</h1><span class="pbadge" id="adminPageBadge" style="background:#ff6b6b;color:#fff">ADMIN</span></div>
@@ -312,7 +312,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
     </div>
   </div>
 </div>
- 
+
 <!-- EDIT MODAL -->
 <div class="modal-ov" id="modalOv">
   <div class="modal">
@@ -342,12 +342,34 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--tm-bg);color:var(--
   </div>
 </div>
 <div class="toast" id="toast"></div>
- 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCoQeYa-u8mPWfBsN_wXLicR1lhuB9Upfk",
+  authDomain: "transfer-market-fc.firebaseapp.com",
+  databaseURL: "https://transfer-market-fc-default-rtdb.firebaseio.com",
+  projectId: "transfer-market-fc",
+  storageBucket: "transfer-market-fc.firebasestorage.app",
+  messagingSenderId: "614323872667",
+  appId: "1:614323872667:web:ac39494626415d29d5f73e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ── expose helpers lên window để code non-module dùng được ──
+window._fb = { ref, set, get, onValue, update, db };
+window._fbReady = true;
+window.dispatchEvent(new Event('fbReady'));
+</script>
 <script>
 // simple hash
 function h(s){let v=0;for(let i=0;i<s.length;i++){v=((v<<5)-v)+s.charCodeAt(i);v|=0}return v.toString(36)}
- 
+
 const BONUSES=[
   {id:'vdich',   lbl:'Vô địch',                tag:'+20',  type:'val', amt:20,  cls:'',       desc:'Đội vô địch giải đấu — mỗi cầu thủ +20'},
   {id:'vuabt',   lbl:'Vua bàn thắng',          tag:'+50',  type:'val', amt:50,  cls:'special',desc:'Cầu thủ ghi nhiều bàn nhất +50'},
@@ -357,7 +379,7 @@ const BONUSES=[
   {id:'puskas',  lbl:'Puskas',                 tag:'+20',  type:'val', amt:20,  cls:'special',desc:'Bàn thắng đẹp nhất +20'},
   {id:'hvtm',    lbl:'HV Thủ môn',             tag:'+20',  type:'gk',  amt:20,  cls:'gk',     desc:'Thủ môn cộng +20 mỗi lần tăng chỉ số tổng'},
 ];
- 
+
 const INIT=[
   {id:1, stt:1, so:'09',ten:'TDũng',  doi:'FC Mobile',  rating:2,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
   {id:2, stt:2, so:'07',ten:'BKhang', doi:'FC Mobile',  rating:3,val:150, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
@@ -387,36 +409,96 @@ const INIT=[
   {id:25,stt:25,so:'',  ten:'KMinh1', doi:'FC Sĩ Gái',  rating:3,val:100, idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
   {id:26,stt:26,so:'',  ten:'ĐMinh',  doi:'FC Sĩ Gái',  rating:1,val:50,  idx:{toc:0,suc:0,ky:0,tong:0},qbv:0},
 ];
- 
+
 const ADMIN_H=h('hanhnguyen110312');
 const TC={'FC Mobile':'#185FA5','FC Bựa Dâm':'#27ae60','FC Sĩ Gái':'#8e44ad'};
 const TL={'FC Mobile':'#d6eaf8','FC Bựa Dâm':'#d5f5e3','FC Sĩ Gái':'#e8daef'};
 const TD={'FC Mobile':'#0c3460','FC Bựa Dâm':'#1e8449','FC Sĩ Gái':'#6c3483'};
- 
+
 // version reset
 const VER='v5';
 if(localStorage.getItem('tmV')!==VER){localStorage.removeItem('tmD');localStorage.removeItem('tmBL');localStorage.setItem('tmV',VER)}
- 
+
 let DATA=JSON.parse(localStorage.getItem('tmD')||JSON.stringify(INIT));
 let BL=JSON.parse(localStorage.getItem('tmBL')||'[]');
 let USERS=initUsers();
 let CU=null, cF='all', cS='val', eId=null, c1=null, c2=null;
- 
+
 function initUsers(){
   let us=JSON.parse(localStorage.getItem('tmU')||'[]');
   const vq=us.find(u=>u.un==='vquyetthang');
-  if(!vq){
-    us.push({un:'vquyetthang',h:ADMIN_H,role:'superadmin',ok:true,ep:[]});
-  } else {
-    // Luôn đảm bảo vquyetthang là superadmin dù localStorage có gì
-    vq.role='superadmin';
-    vq.ok=true;
-  }
+  if(!vq){ us.push({un:'vquyetthang',h:ADMIN_H,role:'superadmin',ok:true,ep:[]}); }
+  else { vq.role='superadmin'; vq.ok=true; }
   localStorage.setItem('tmU',JSON.stringify(us));
   return us;
 }
-function sd(){localStorage.setItem('tmD',JSON.stringify(DATA));localStorage.setItem('tmU',JSON.stringify(USERS));localStorage.setItem('tmBL',JSON.stringify(BL))}
- 
+
+// Load data từ Firebase, sync về local rồi render
+async function loadFromFirebase(){
+  showLoading(true);
+  try {
+    const [fbPlayers, fbUsers, fbBL] = await Promise.all([
+      fbGet('data/players'),
+      fbGet('data/users'),
+      fbGet('data/bonusLog')
+    ]);
+
+    if(fbPlayers && Array.isArray(fbPlayers) && fbPlayers.length > 0){
+      DATA = fbPlayers;
+      localStorage.setItem('tmD', JSON.stringify(DATA));
+    }
+    if(fbUsers && Array.isArray(fbUsers) && fbUsers.length > 0){
+      // Luôn đảm bảo vquyetthang là superadmin
+      const vq = fbUsers.find(u=>u.un==='vquyetthang');
+      if(vq){ vq.role='superadmin'; vq.ok=true; }
+      USERS = fbUsers;
+      localStorage.setItem('tmU', JSON.stringify(USERS));
+      // Cập nhật CU nếu đang đăng nhập
+      if(CU){ const fresh=USERS.find(u=>u.un===CU.un); if(fresh){ if(fresh.un==='vquyetthang')fresh.role='superadmin'; CU=fresh; } }
+    }
+    if(fbBL && Array.isArray(fbBL)){
+      BL = fbBL;
+      localStorage.setItem('tmBL', JSON.stringify(BL));
+    }
+    // Nếu Firebase chưa có data, push data local lên
+    if(!fbPlayers){ fbSet('data/players', DATA); }
+    if(!fbUsers){ fbSet('data/users', USERS); }
+    if(!fbBL){ fbSet('data/bonusLog', BL); }
+  } catch(e){ console.warn('Firebase load error:', e); }
+  showLoading(false);
+  // Re-render trang hiện tại
+  const cur = document.querySelector('.nav-item.active')?.textContent?.trim();
+  if(cur==='THỊ TRƯỜNG'||cur==='Thị trường'){ rStats();rTable();rCharts(); }
+  if(cur==='THƯỞNG SAU TRẬN'||cur==='Thưởng sau trận'){ rBonus(); }
+  if(cur==='ADMIN'||cur==='Admin'){ rAdmin(); }
+}
+
+function showLoading(on){
+  let el=document.getElementById('fbLoader');
+  if(!el){
+    el=document.createElement('div');
+    el.id='fbLoader';
+    el.style='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#1a5276;color:#fff;padding:6px 18px;border-radius:20px;font-size:12px;z-index:9999;display:none;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+    el.textContent='Đang đồng bộ Firebase...';
+    document.body.appendChild(el);
+  }
+  el.style.display=on?'block':'none';
+}
+// ── Firebase helpers ──
+function fbSet(path, val){ if(!window._fb)return; const {db,ref,set}=window._fb; set(ref(db,path),val); }
+function fbGet(path){ if(!window._fb)return Promise.resolve(null); const {db,ref,get}=window._fb; return get(ref(db,path)).then(s=>s.exists()?s.val():null); }
+function fbListen(path,cb){ if(!window._fb)return; const {db,ref,onValue}=window._fb; onValue(ref(db,path),s=>cb(s.exists()?s.val():null)); }
+
+function sd(){
+  // Lưu cả localStorage (fallback) và Firebase
+  localStorage.setItem('tmD',JSON.stringify(DATA));
+  localStorage.setItem('tmU',JSON.stringify(USERS));
+  localStorage.setItem('tmBL',JSON.stringify(BL));
+  fbSet('data/players', DATA);
+  fbSet('data/users', USERS);
+  fbSet('data/bonusLog', BL);
+}
+
 function stars(r){let s='';for(let i=0;i<r;i++)s+='★';for(let i=r;i<5;i++)s+='☆';return s}
 function ini(n){return n.substring(0,2).toUpperCase()}
 function itot(idx){return(idx.toc||0)+(idx.suc||0)+(idx.ky||0)+(idx.tong||0)}
@@ -430,7 +512,7 @@ function toast(msg,t=''){const el=document.getElementById('toast');el.textConten
 function canE(){return CU&&(CU.role==='superadmin'||CU.role==='admin'||CU.role==='member')}
 function isSuperAdmin(){return CU&&CU.role==='superadmin'}
 function isAdmin(){return CU&&(CU.role==='admin'||CU.role==='superadmin')}
- 
+
 // AUTH
 function switchTab(tab){
   document.querySelectorAll('.auth-tab').forEach((b,i)=>b.classList[i===(tab==='login'?0:1)?'add':'remove']('active'));
@@ -486,8 +568,11 @@ function enterApp(){
   document.getElementById('btnReqMember').style.display=(CU.role==='guest')?'block':'none';
   updateReqBtn();
   showPage('Market');
+  // Sync Firebase mỗi khi vào app
+  if(window._fbReady){ loadFromFirebase(); }
+  else { window.addEventListener('fbReady',()=>loadFromFirebase(),{once:true}); }
 }
- 
+
 // PAGES
 function showPage(p){
   ['Market','Bonus','Admin'].forEach(x=>document.getElementById('page'+x).style.display='none');
@@ -499,7 +584,7 @@ function showPage(p){
   if(p==='Bonus'){rBonus()}
   if(p==='Admin'){rAdmin()}
 }
- 
+
 // MARKET
 function getF(){
   let d=cF==='all'?[...DATA]:DATA.filter(p=>p.doi===cF);
@@ -585,7 +670,7 @@ function rCharts(){
   if(c2)c2.destroy();
   c2=new Chart(document.getElementById('c2'),{type:'bar',data:{labels:sorted.map(p=>p.ten),datasets:[{data:sorted.map(p=>p.val),backgroundColor:sorted.map(p=>TC[p.doi]+'99'),borderColor:sorted.map(p=>TC[p.doi]),borderWidth:1,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45,autoSkip:false}},y:{ticks:{callback:v=>v.toLocaleString()+' ▪',font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}}}}});
 }
- 
+
 // BONUS
 function rBonus(){
   const ok=canE();
@@ -615,7 +700,7 @@ function rBH(){
   const el=document.getElementById('bonusHist');
   el.innerHTML=BL.length?BL.slice(0,20).map(x=>'<div class="hist-item"><span><b>'+x.pl+'</b> — '+x.bn+'</span><span style="color:#aaa;font-size:10px">'+x.t+' · '+x.by+'</span></div>').join(''):'<div style="font-size:12px;color:#aaa;text-align:center;padding:10px">Chưa có lịch sử</div>';
 }
- 
+
 // ADMIN
 function rAdmin(){
   // Ẩn/hiện quản lý thành viên tuỳ quyền
@@ -716,7 +801,13 @@ function exportData(){
 }
 document.getElementById('modalOv').addEventListener('click',function(e){if(e.target===this)closeModal()});
 document.getElementById('lPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
- 
+
+// Khi Firebase sẵn sàng + đã có session → load data
+window.addEventListener('fbReady',()=>{
+  const savedUn=sessionStorage.getItem('tmSession');
+  if(savedUn && CU){ loadFromFirebase(); }
+});
+
 // Auto-restore session khi refresh trang
 (function restoreSession(){
   const savedUn = sessionStorage.getItem('tmSession');
