@@ -838,22 +838,24 @@ async function rAdmin() {
   } catch {}
   document.getElementById("adminPageBadge").textContent = isSuperAdmin() ? "SUPER ADMIN" : "ADMIN";
   document.getElementById("memberMgmtSection").style.display = isAdmin() ? "block" : "none";
-  document.getElementById("tournamentSection").style.display = isSuperAdmin() ? "block" : "none";
+  const tournamentSection = document.getElementById("marketTournamentSection");
+  if (tournamentSection) tournamentSection.style.display = isSuperAdmin() ? "block" : "none";
   renderTournaments();
-  const approved = USERS.filter((u) => u.ok);
   const reqAdmin = USERS.filter((u) => u.reqAdmin && u.role === "guest");
   const pendEl = document.getElementById("pendingList");
   pendEl.innerHTML = reqAdmin.length ? reqAdmin.map((u) => `<div class="urow"><span>${esc(u.un)} <span class="urole r-guest">Guest</span></span><div style="display:flex;gap:4px"><button class="bsm bsm-ok" onclick="makeAdminU('${u.un}')">Duyệt → Admin</button><button class="bsm bsm-del" onclick="rejectAdminReq('${u.un}')">Từ chối</button></div></div>`).join("") : '<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Không có yêu cầu</div>';
   const allEl = document.getElementById("allUsers");
-  allEl.innerHTML = approved.map((u) => {
-    const rb = `<span class="urole r-${u.role}">${u.role === "superadmin" ? "Super Admin" : u.role === "admin" ? "Admin" : "Guest"}</span>`;
+  const allUsers = USERS;
+  allEl.innerHTML = allUsers.length ? allUsers.map((u) => {
+    const roleLabel = u.ok ? (u.role === "superadmin" ? "Super Admin" : u.role === "admin" ? "Admin" : "Guest") : "Chờ duyệt";
+    const rb = `<span class="urole r-${u.role === "guest" && !u.ok ? "guest" : u.role}">${roleLabel}</span>`;
     const isSuper = isSuperAdmin();
     const canMakeAdmin = isSuper && u.role === "guest" && u.un !== "vquyetthang";
     const canDemote = isSuper && u.role === "admin";
     const canDel = isSuper && u.un !== "vquyetthang";
     const reqTag = u.reqAdmin ? '<span style="font-size:10px;background:#fef9e7;color:#856404;padding:1px 5px;border-radius:2px;border:1px solid #f9e79f;margin-left:4px">Xin Admin</span>' : "";
     return `<div class="urow"><div>${esc(u.un)} ${rb}${reqTag}</div><div style="display:flex;gap:4px;flex-wrap:wrap">${u.un === "vquyetthang" ? '<span style="font-size:11px;color:#aaa">Super Admin</span>' : `${canMakeAdmin ? `<button class="bsm" style="background:#fde8b0;color:#6d3a00;border-color:#e8a317" onclick="makeAdminU('${u.un}')">→ Admin</button>` : ""}${canDemote ? `<button class="bsm bsm-dg" onclick="demU('${u.un}')">→ Guest</button>` : ""}${canDel ? `<button class="bsm bsm-del" onclick="delU('${u.un}')">Xoá</button>` : ""}`}</div></div>`;
-  }).join("");
+  }).join("") : '<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Chưa có tài khoản nào</div>';
   document.getElementById("delSel").innerHTML = DATA.map((p) => `<option value="${p.id}">${esc(p.ten)} (${esc(p.doi.replace("FC ", ""))})</option>`).join("");
 }
 
