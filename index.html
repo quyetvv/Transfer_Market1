@@ -430,6 +430,10 @@ function initUsers(){
   if(!vq){ us.push({un:'vquyetthang',h:ADMIN_H,role:'superadmin',ok:true,ep:[]}); }
   else { vq.role='superadmin'; vq.ok=true; }
   localStorage.setItem('tmU',JSON.stringify(us));
+  // Đảm bảo vquyetthang luôn có trên Firebase
+  const vqObj=us.find(u=>u.un==='vquyetthang');
+  if(vqObj && window._fb){ fbSetUser(vqObj); }
+  else if(vqObj){ window.addEventListener('fbReady',()=>fbSetUser(vqObj),{once:true}); }
   return us;
 }
 
@@ -439,7 +443,7 @@ async function loadFromFirebase(){
   try {
     const [fbPlayers, fbUsers, fbBL] = await Promise.all([
       fbGet('data/players'),
-      fbGet('data/users'),
+      fbGetUsers(),
       fbGet('data/bonusLog')
     ]);
 
@@ -447,13 +451,11 @@ async function loadFromFirebase(){
       DATA = fbPlayers;
       localStorage.setItem('tmD', JSON.stringify(DATA));
     }
-    if(fbUsers && Array.isArray(fbUsers) && fbUsers.length > 0){
-      // Luôn đảm bảo vquyetthang là superadmin
+    if(fbUsers && fbUsers.length > 0){
       const vq = fbUsers.find(u=>u.un==='vquyetthang');
       if(vq){ vq.role='superadmin'; vq.ok=true; }
       USERS = fbUsers;
       localStorage.setItem('tmU', JSON.stringify(USERS));
-      // Cập nhật CU nếu đang đăng nhập
       if(CU){ const fresh=USERS.find(u=>u.un===CU.un); if(fresh){ if(fresh.un==='vquyetthang')fresh.role='superadmin'; CU=fresh; } }
     }
     if(fbBL && Array.isArray(fbBL)){
@@ -462,7 +464,7 @@ async function loadFromFirebase(){
     }
     // Nếu Firebase chưa có data, push data local lên
     if(!fbPlayers){ fbSet('data/players', DATA); }
-    if(!fbUsers){ fbSet('data/users', USERS); }
+    if(fbUsers.length===0){ USERS.forEach(u=>fbSetUser(u)); }
     if(!fbBL){ fbSet('data/bonusLog', BL); }
   } catch(e){ console.warn('Firebase load error:', e); }
   showLoading(false);
@@ -488,6 +490,17 @@ function showLoading(on){
 function fbSet(path, val){ if(!window._fb)return; const {db,ref,set}=window._fb; set(ref(db,path),val); }
 function fbGet(path){ if(!window._fb)return Promise.resolve(null); const {db,ref,get}=window._fb; return get(ref(db,path)).then(s=>s.exists()?s.val():null); }
 function fbListen(path,cb){ if(!window._fb)return; const {db,ref,onValue}=window._fb; onValue(ref(db,path),s=>cb(s.exists()?s.val():null)); }
+
+// Convert users array <-> object để lưu Firebase an toàn
+function usersToObj(arr){ const o={}; arr.forEach(u=>{ o[u.un]=u; }); return o; }
+function objToUsers(obj){ if(!obj)return []; return Object.values(obj); }
+
+// Lưu/load users riêng từng record thay vì ghi đè cả array
+function fbSetUser(u){ if(!window._fb)return; fbSet('users/'+u.un, u); }
+async function fbGetUsers(){
+  const obj = await fbGet('users');
+  return objToUsers(obj);
+}
 
 function sd(){
   // Lưu cả localStorage (fallback) và Firebase
@@ -540,20 +553,21 @@ async function doRegister(){
   if(p.length<6){m.innerHTML='<div class="auth-msg err">Mật khẩu ít nhất 6 ký tự</div>';return}
   m.innerHTML='<div class="auth-msg warn">Đang kiểm tra...</div>';
   // Load users mới nhất từ Firebase trước khi tạo
-  const fbUsers = await fbGet('data/users');
-  if(fbUsers && Array.isArray(fbUsers)){
-    USERS=fbUsers;
-    const vq=USERS.find(x=>x.un==='vquyetthang');
+  const fbUsers = await fbGetUsers();
+  if(fbUsers && fbUsers.length > 0){
+    const vq=fbUsers.find(x=>x.un==='vquyetthang');
     if(vq){vq.role='superadmin';vq.ok=true;}
+    USERS=fbUsers;
     localStorage.setItem('tmU',JSON.stringify(USERS));
   } else {
     USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   }
   if(USERS.find(x=>x.un===u)){m.innerHTML='<div class="auth-msg err">Username đã tồn tại</div>';return}
-  USERS.push({un:u,h:h(p),role:'guest',ok:true,ep:[]});
+  const newUser={un:u,h:h(p),role:'guest',ok:true,ep:[]};
+  USERS.push(newUser);
   localStorage.setItem('tmU',JSON.stringify(USERS));
-  // Push lên Firebase ngay lập tức
-  fbSet('data/users', USERS);
+  // Ghi riêng từng user lên Firebase - tránh race condition
+  fbSetUser(newUser);
   m.innerHTML='<div class="auth-msg ok">Tạo tài khoản thành công! Đang chuyển hướng...</div>';
   document.getElementById('rUser').value='';document.getElementById('rPass').value='';document.getElementById('rPass2').value='';
   setTimeout(()=>switchTab('login'),1500);
@@ -717,14 +731,14 @@ function rBH(){
 async function rAdmin(){
   // Load users mới nhất từ Firebase
   try {
-    const fbUsers=await fbGet('data/users');
-    if(fbUsers&&Array.isArray(fbUsers)){
+    const fbUsers=await fbGetUsers();
+    if(fbUsers&&fbUsers.length>0){
       const vq=fbUsers.find(x=>x.un==='vquyetthang');
       if(vq){vq.role='superadmin';vq.ok=true;}
       USERS=fbUsers;
       localStorage.setItem('tmU',JSON.stringify(USERS));
     }
-  } catch(e){}
+  } catch(e){ console.warn('rAdmin load error:',e); }
   // Ẩn/hiện quản lý thành viên tuỳ quyền
   const mgmt=document.getElementById('memberMgmtSection');
   if(mgmt)mgmt.style.display=isSuperAdmin()?'block':'none';
@@ -746,14 +760,14 @@ async function rAdmin(){
 function approveU(un){
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   const u=USERS.find(x=>x.un===un);
-  if(u){u.ok=true;localStorage.setItem('tmU',JSON.stringify(USERS));fbSet('data/users',USERS);toast('Đã duyệt '+un,'success');rAdmin()}
+  if(u){u.ok=true;localStorage.setItem('tmU',JSON.stringify(USERS));fbSetUser(u);toast('Đã duyệt '+un,'success');rAdmin()}
 }
 function delU(un){
   if(!confirm('Xoá tài khoản "'+un+'"?'))return;
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   USERS=USERS.filter(x=>x.un!==un);
   localStorage.setItem('tmU',JSON.stringify(USERS));
-  fbSet('data/users',USERS);
+  fbSet('users/'+un, null);
   toast('Đã xoá '+un);rAdmin();
 }
 function promU(un){
@@ -767,7 +781,7 @@ function promU(un){
     const ids=DATA.map(p=>p.id).sort(()=>Math.random()-.5).slice(0,3);
     u.ep=ids;
     localStorage.setItem('tmU',JSON.stringify(USERS));
-    fbSet('data/users',USERS);
+    fbSetUser(u);
     const names=ids.map(id=>DATA.find(p=>p.id===id)?.ten||'?').join(', ');
     toast(un+' → Hội viên. Sửa được: '+names,'success');rAdmin();
   }
@@ -775,17 +789,17 @@ function promU(un){
 function makeAdminU(un){
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   const u=USERS.find(x=>x.un===un);
-  if(u){u.role='admin';u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));fbSet('data/users',USERS);toast(un+' → Admin','success');rAdmin()}
+  if(u){u.role='admin';u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));fbSetUser(u);toast(un+' → Admin','success');rAdmin()}
 }
 function rejectReq(un){
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   const u=USERS.find(x=>x.un===un);
-  if(u){u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));fbSet('data/users',USERS);toast('Đã từ chối yêu cầu của '+un);rAdmin()}
+  if(u){u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));fbSetUser(u);toast('Đã từ chối yêu cầu của '+un);rAdmin()}
 }
 function demU(un){
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   const u=USERS.find(x=>x.un===un);
-  if(u){u.role='guest';u.ep=[];u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));fbSet('data/users',USERS);toast(un+' → Guest');rAdmin()}
+  if(u){u.role='guest';u.ep=[];u.reqMember=false;localStorage.setItem('tmU',JSON.stringify(USERS));fbSetUser(u);toast(un+' → Guest');rAdmin()}
 }
 function updateReqBtn(){
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
@@ -798,7 +812,7 @@ function updateReqBtn(){
 function reqMemberFn(){
   USERS=JSON.parse(localStorage.getItem('tmU')||'[]');
   const u=USERS.find(x=>x.un===CU?.un);
-  if(u){u.reqMember=true;localStorage.setItem('tmU',JSON.stringify(USERS));fbSet('data/users',USERS);updateReqBtn();toast('Đã gửi yêu cầu lên Hội viên đến admin!','success')}
+  if(u){u.reqMember=true;localStorage.setItem('tmU',JSON.stringify(USERS));fbSetUser(u);updateReqBtn();toast('Đã gửi yêu cầu lên Hội viên đến admin!','success')}
 }
 function addPlayer(){
   const ten=document.getElementById('nTen').value.trim();
