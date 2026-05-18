@@ -146,12 +146,29 @@
 <div id="pageTransfer" style="display:none">
   <div class="page-title-bar">
     <h1>Chuyển nhượng</h1>
-    <span class="pbadge">Mua/Bán</span>
+    <span class="pbadge">OSM-style</span>
   </div>
+
+  <!-- Transfer Window Banner -->
+  <div id="transferWindowBanner"></div>
+
+  <!-- Transfer Window Controls (SuperAdmin only) -->
+  <div class="admin-sect" id="transferWindowControls" style="display:none">
+    <div class="admin-hdr">⚙️ Cửa sổ chuyển nhượng</div>
+    <div class="admin-body" id="transferWindowBody"></div>
+  </div>
+
+  <!-- Auction Board -->
   <div class="admin-sect">
-    <div class="admin-hdr">Yêu cầu mua/bán cầu thủ</div>
+    <div class="admin-hdr">🔨 Bảng đấu giá — Cầu thủ đang rao bán</div>
+    <div class="admin-body" id="auctionBoard"><div style="font-size:12px;color:#aaa;padding:10px;border:1px dashed #ccc;border-radius:4px">Chưa có cầu thủ nào đang rao bán</div></div>
+  </div>
+
+  <!-- Direct Buy Request -->
+  <div class="admin-sect">
+    <div class="admin-hdr">💸 Yêu cầu mua trực tiếp</div>
     <div class="admin-body">
-      <div class="form-note" id="purchaseNoteHeader" style="margin-bottom:12px;color:#444;font-size:13px">Chỉ Chủ tịch CLB hoặc Admin mới xem/form giao dịch mua/bán.</div>
+      <div class="form-note" id="purchaseNoteHeader" style="margin-bottom:12px;color:#444;font-size:13px">Chỉ Chủ tịch CLB hoặc Admin mới thực hiện giao dịch mua/bán.</div>
       <div id="purchaseRequestSection">
         <div class="form-row" style="margin-bottom:10px">
           <div class="form-group" style="margin:0"><label class="form-label">Chọn cầu thủ</label><select class="form-input" id="purchasePlayerSel"></select></div>
@@ -163,8 +180,36 @@
         </div>
         <button class="btn-save" onclick="submitPurchaseRequest()">Gửi yêu cầu mua</button>
       </div>
-      <div class="admin-card" style="margin-top:16px"><h3>Yêu cầu mua/bán của bạn</h3><div id="myPurchaseSuggList"></div></div>
     </div>
+  </div>
+
+  <!-- Loan Section -->
+  <div class="admin-sect">
+    <div class="admin-hdr">🔄 Cho mượn / Mượn cầu thủ</div>
+    <div class="admin-body">
+      <!-- Loan request form (President only, window open) -->
+      <div id="loanRequestSection" style="display:none">
+        <div style="font-size:13px;color:#555;margin-bottom:10px">Gửi yêu cầu mượn cầu thủ từ CLB khác. CLB chủ sẽ nhận phí mượn (nếu có).</div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0"><label class="form-label">Cầu thủ muốn mượn</label><select class="form-input" id="loanPlayerSel"></select></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Trả về ngày</label><input class="form-input" id="loanUntil" type="date"></div>
+        </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0"><label class="form-label">Phí mượn (▪, 0 = miễn phí)</label><input class="form-input" id="loanFee" type="number" placeholder="0" value="0"></div>
+        </div>
+        <button class="btn-save" onclick="submitLoanRequest()">Gửi yêu cầu mượn</button>
+        <hr style="margin:14px 0;border-color:#eee">
+      </div>
+      <!-- Active loans -->
+      <h3 style="font-size:13px;font-weight:600;margin:0 0 8px">Hợp đồng mượn đang hiệu lực</h3>
+      <div id="activeLoans"></div>
+    </div>
+  </div>
+
+  <!-- My Requests -->
+  <div class="admin-sect">
+    <div class="admin-hdr">📋 Yêu cầu của bạn</div>
+    <div class="admin-body"><div id="myPurchaseSuggList"></div></div>
   </div>
 </div>
 
@@ -275,6 +320,7 @@
           <div class="admin-card"><h3>Đề xuất thêm cầu thủ</h3><div id="suggPlayerApprove"></div></div>
           <div class="admin-card"><h3>Đề xuất thưởng</h3><div id="suggBonusApprove"></div></div>
           <div class="admin-card"><h3>Yêu cầu mua/bán</h3><div id="suggPurchaseApprove"></div></div>
+          <div class="admin-card"><h3>Yêu cầu mượn cầu thủ</h3><div id="suggLoanApprove"></div></div>
         </div>
       </div>
     </div>

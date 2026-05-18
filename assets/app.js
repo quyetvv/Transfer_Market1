@@ -71,6 +71,8 @@ let SUGG = JSON.parse(localStorage.getItem("tmSUGG") || "[]");
 let CUSTOM_BONUSES = JSON.parse(localStorage.getItem("tmCB") || "[]");
 let TOURNAMENTS = JSON.parse(localStorage.getItem("tmT") || "[]");
 let CLUB_FUNDS = JSON.parse(localStorage.getItem("tmF") || "{}");
+let LOANS = JSON.parse(localStorage.getItem("tmLoans") || "[]");
+let TRANSFER_WINDOW = JSON.parse(localStorage.getItem("tmTW") || '{"open":false}');
 let USERS = initUsers();
 let CU = null;
 let cF = "all";
@@ -149,19 +151,23 @@ function sd() {
   localStorage.setItem("tmCB", JSON.stringify(CUSTOM_BONUSES));
   localStorage.setItem("tmT", JSON.stringify(TOURNAMENTS));
   localStorage.setItem("tmF", JSON.stringify(CLUB_FUNDS));
+  localStorage.setItem("tmLoans", JSON.stringify(LOANS));
+  localStorage.setItem("tmTW", JSON.stringify(TRANSFER_WINDOW));
   fbSet("data/players", DATA);
   fbSet("data/bonusLog", BL.length ? BL : null);
   fbSet("data/suggestions", SUGG.length ? SUGG : null);
   fbSet("data/customBonuses", CUSTOM_BONUSES.length ? CUSTOM_BONUSES : null);
   fbSet("data/tournaments", TOURNAMENTS.length ? TOURNAMENTS : null);
   fbSet("data/clubFunds", Object.keys(CLUB_FUNDS).length ? CLUB_FUNDS : null);
+  fbSet("data/loans", LOANS.length ? LOANS : null);
+  fbSet("data/transferWindow", TRANSFER_WINDOW);
   renderClubFundBadge();
 }
 
 async function loadFromFirebase() {
   showLoading(true);
   try {
-    const [fbP, fbU, fbBL, fbSUGG, fbCB, fbT, fbF] = await Promise.all([
+    const [fbP, fbU, fbBL, fbSUGG, fbCB, fbT, fbF, fbLoans, fbTW] = await Promise.all([
       fbGet("data/players"),
       fbGetUsers(),
       fbGet("data/bonusLog"),
@@ -169,6 +175,8 @@ async function loadFromFirebase() {
       fbGet("data/customBonuses"),
       fbGet("data/tournaments"),
       fbGet("data/clubFunds"),
+      fbGet("data/loans"),
+      fbGet("data/transferWindow"),
     ]);
     if (Array.isArray(fbP) && fbP.length > 0) {
       DATA = fbP;
@@ -210,6 +218,14 @@ async function loadFromFirebase() {
       CLUB_FUNDS = fbF;
       localStorage.setItem("tmF", JSON.stringify(CLUB_FUNDS));
     }
+    if (Array.isArray(fbLoans)) {
+      LOANS = fbLoans;
+      localStorage.setItem("tmLoans", JSON.stringify(LOANS));
+    }
+    if (fbTW && typeof fbTW === "object") {
+      TRANSFER_WINDOW = fbTW;
+      localStorage.setItem("tmTW", JSON.stringify(TRANSFER_WINDOW));
+    }
     if (!fbP) fbSet("data/players", DATA);
     if (Array.isArray(fbU) && fbU.length === 0) USERS.forEach((u) => fbSetUser(u));
   } catch (e) {
@@ -223,7 +239,7 @@ async function loadFromFirebase() {
     rCharts();
     renderTournaments();
   }
-  if (cur === "Chuyển nhượng") renderPurchaseForm();
+  if (cur === "Chuyển nhượng") renderTransferPage();
   if (cur === "Thưởng sau trận") rBonus();
   if (cur === "Giải đấu") renderTournamentPage();
   if (cur === "Admin") {
@@ -437,7 +453,8 @@ function enterApp() {
 
 function showPage(p) {
   ["Market", "Transfer", "Tournament", "Bonus", "Admin"].forEach((x) => { const el = document.getElementById(`page${x}`); if (el) el.style.display = "none"; });
-  document.getElementById(`page${p}`)?.style.display = "block";
+  const pageEl = document.getElementById(`page${p}`);
+  if (pageEl) pageEl.style.display = "block";
   document.querySelectorAll(".nav-item").forEach((n) => n.classList.remove("active"));
   const idx = { Market: 0, Transfer: 1, Tournament: 2, Bonus: 3, Admin: 4 }[p];
   document.querySelectorAll(".nav-item")[idx]?.classList.add("active");
@@ -451,7 +468,7 @@ function showPage(p) {
     renderTournaments();
   }
   if (p === "Transfer") {
-    renderPurchaseForm();
+    renderTransferPage();
   }
   if (p === "Bonus") rBonus();
   if (p === "Admin") {
@@ -944,6 +961,237 @@ function renderPurchaseForm() {
   }
 }
 
+// ── TRANSFER WINDOW ──────────────────────────────────────────────────────────
+function isTransferWindowOpen() { return !!TRANSFER_WINDOW.open; }
+
+function toggleTransferWindow() {
+  if (!isSuperAdmin()) return;
+  TRANSFER_WINDOW.open = !TRANSFER_WINDOW.open;
+  sd();
+  toast(TRANSFER_WINDOW.open ? "✅ Đã mở cửa sổ chuyển nhượng" : "🔒 Đã đóng cửa sổ chuyển nhượng", "success");
+  renderTransferPage();
+}
+
+function renderTransferPage() {
+  renderTransferWindowBanner();
+  renderAuctionBoard();
+  renderActiveLoans();
+  renderPurchaseForm();
+  renderMySugg();
+  const ctrl = document.getElementById("transferWindowControls");
+  if (ctrl) ctrl.style.display = isSuperAdmin() ? "block" : "none";
+}
+
+function renderTransferWindowBanner() {
+  const el = document.getElementById("transferWindowBanner");
+  if (!el) return;
+  const twBody = document.getElementById("transferWindowBody");
+  if (twBody) {
+    twBody.innerHTML = `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="font-size:14px">Trạng thái: <strong style="color:${TRANSFER_WINDOW.open ? "#27ae60" : "#c0392b"}">${TRANSFER_WINDOW.open ? "✅ Đang mở" : "🔒 Đã đóng"}</strong></div>
+      <button class="btn-save" onclick="toggleTransferWindow()" style="font-size:13px;padding:6px 14px">${TRANSFER_WINDOW.open ? "Đóng cửa sổ" : "Mở cửa sổ"}</button>
+    </div>`;
+  }
+  el.innerHTML = TRANSFER_WINDOW.open
+    ? `<div style="background:#eafaf1;border:1px solid #27ae60;border-radius:4px;padding:8px 14px;font-size:13px;color:#1e8449;margin-bottom:10px">✅ Cửa sổ chuyển nhượng đang mở — Có thể mua/bán/đấu giá/cho mượn</div>`
+    : `<div style="background:#fdf2f2;border:1px solid #e74c3c;border-radius:4px;padding:8px 14px;font-size:13px;color:#c0392b;margin-bottom:10px">🔒 Cửa sổ chuyển nhượng đang đóng — Không thể thực hiện giao dịch mới</div>`;
+}
+
+// ── AUCTION / BIDDING ─────────────────────────────────────────────────────────
+function formatTimeLeft(deadline) {
+  const diff = new Date(deadline) - Date.now();
+  if (diff <= 0) return "Hết hạn";
+  const h = Math.floor(diff / 3600000);
+  if (h < 24) return `${h}h còn lại`;
+  return `${Math.floor(diff / 86400000)} ngày còn lại`;
+}
+
+function renderAuctionBoard() {
+  const el = document.getElementById("auctionBoard");
+  if (!el) return;
+  const forSale = DATA.filter((p) => p.forSale);
+  if (!forSale.length) {
+    el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:10px;border:1px dashed #ccc;border-radius:4px">Chưa có cầu thủ nào đang rao bán</div>';
+    return;
+  }
+  el.innerHTML = forSale.map((p) => {
+    const bids = SUGG.filter((s) => s.type === "bid" && s.data.pid === p.id && s.status === "pending").sort((a, b) => b.data.offer - a.data.offer);
+    const topBid = bids[0];
+    const expired = p.saleDeadline && new Date(p.saleDeadline) < new Date();
+    const timeLeft = p.saleDeadline ? formatTimeLeft(p.saleDeadline) : "Không giới hạn";
+    const alreadyBid = bids.find((b) => b.data.toClub === CU?.club);
+    const canBid = isTransferWindowOpen() && isPresident() && CU.club !== p.doi && !expired;
+    const minBid = (topBid?.data.offer || p.listPrice || p.val) + (topBid ? 1 : 0);
+    const bidHtml = canBid ? `<div style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="number" class="form-input" id="bidAmt-${p.id}" style="width:90px" placeholder="${minBid}" min="${minBid}"><button class="btn-save" style="font-size:12px;padding:5px 10px" onclick="placeBid(${p.id})">Đặt giá</button>${alreadyBid ? `<span style="font-size:11px;color:#888">Giá của bạn: ${alreadyBid.data.offer.toLocaleString()}▪</span>` : ""}</div>` : "";
+    const closeBtn = isAdmin() && topBid ? `<button class="btn-save" style="background:#2c3e50;font-size:12px;padding:5px 10px" onclick="closeAuction(${p.id})">Chốt đấu giá</button>` : "";
+    const cancelBtn = (isAdmin() || (isPresident() && CU.club === p.doi)) ? `<button class="btn-danger" style="font-size:12px;padding:5px 8px" onclick="cancelSale(${p.id})">Hủy rao</button>` : "";
+    const bidsHtml = bids.length
+      ? `<div style="margin-top:6px;font-size:12px"><strong>Giá đang đặt:</strong><ul style="margin:3px 0 0;padding-left:16px">${bids.map((b, i) => `<li style="color:${i === 0 ? "#27ae60" : "#555"}">${esc(b.data.toClub.replace("FC ", ""))}: ${b.data.offer.toLocaleString()}▪ <span style="color:#aaa">(${esc(b.by)})</span></li>`).join("")}</ul></div>`
+      : `<div style="font-size:12px;color:#aaa;margin-top:4px">Chưa có giá đặt</div>`;
+    return `<div style="padding:12px;border:1px solid ${expired ? "#e74c3c" : "#ddd"};border-radius:4px;background:${expired ? "#fdf2f2" : "#fff"};margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px"><div style="flex:1"><div style="font-weight:600">${esc(p.ten)} <span style="font-size:12px;color:#888">(${esc(p.doi.replace("FC ", ""))})</span></div><div style="font-size:12px;color:#555;margin-top:3px">Giá sàn: ${(p.listPrice || p.val).toLocaleString()}▪ · Hạn: ${timeLeft}${expired ? ' <span style="color:#c0392b;font-weight:600">(Hết hạn)</span>' : ""}</div>${bidsHtml}${bidHtml}</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start">${closeBtn}${cancelBtn}</div></div></div>`;
+  }).join("");
+}
+
+function placeBid(pid) {
+  if (!isPresident()) { toast("Chỉ Chủ tịch CLB mới có thể đặt giá", "warn"); return; }
+  if (!isTransferWindowOpen()) { toast("Cửa sổ chuyển nhượng đang đóng", "warn"); return; }
+  const p = DATA.find((x) => x.id === pid);
+  if (!p || !p.forSale) { toast("Cầu thủ không còn rao bán", "warn"); return; }
+  if (p.doi === CU.club) { toast("Không thể đặt giá cầu thủ CLB mình", "warn"); return; }
+  if (p.saleDeadline && new Date(p.saleDeadline) < new Date()) { toast("Phiên đấu giá đã hết hạn", "warn"); return; }
+  const amtInput = document.getElementById(`bidAmt-${pid}`);
+  const offer = parseInt(amtInput?.value, 10);
+  if (!offer || offer <= 0) { toast("Nhập giá đặt hợp lệ", "warn"); return; }
+  const current = SUGG.filter((s) => s.type === "bid" && s.data.pid === pid && s.status === "pending").sort((a, b) => b.data.offer - a.data.offer)[0];
+  const minOffer = current ? current.data.offer + 1 : (p.listPrice || p.val);
+  if (offer < minOffer) { toast(`Giá đặt phải ít nhất ${minOffer.toLocaleString()}▪`, "warn"); return; }
+  if (getClubFunds(CU.club) < offer) { toast(`CLB bạn không đủ quỹ (${getClubFunds(CU.club).toLocaleString()}▪)`, "warn"); return; }
+  SUGG = SUGG.filter((s) => !(s.type === "bid" && s.data.pid === pid && s.data.toClub === CU.club && s.status === "pending"));
+  SUGG.push({ id: `bid_${Date.now()}`, type: "bid", data: { pid, pname: p.ten, fromClub: p.doi, toClub: CU.club, offer }, by: CU.un, status: "pending", time: new Date().toLocaleString("vi-VN") });
+  sd();
+  if (amtInput) amtInput.value = "";
+  toast(`Đã đặt ${offer.toLocaleString()}▪ cho ${p.ten}`, "success");
+  renderAuctionBoard();
+  renderMySugg();
+}
+
+function closeAuction(pid) {
+  if (!isAdmin()) return;
+  const p = DATA.find((x) => x.id === pid);
+  if (!p) return;
+  const bids = SUGG.filter((s) => s.type === "bid" && s.data.pid === pid && s.status === "pending").sort((a, b) => b.data.offer - a.data.offer);
+  const winner = bids[0];
+  if (!winner) { toast("Không có giá đặt nào để chốt", "warn"); return; }
+  if (!confirm(`Chốt: ${winner.data.toClub.replace("FC ", "")} mua ${p.ten} — ${winner.data.offer.toLocaleString()}▪?`)) return;
+  if (getClubFunds(winner.data.toClub) < winner.data.offer) { toast(`${winner.data.toClub.replace("FC ", "")} không đủ quỹ`, "warn"); return; }
+  const fromClub = p.doi;
+  debitClub(winner.data.toClub, winner.data.offer);
+  creditClub(fromClub, winner.data.offer);
+  p.doi = winner.data.toClub;
+  p.forSale = false;
+  delete p.listPrice;
+  delete p.saleDeadline;
+  bids.forEach((b) => { b.status = b.id === winner.id ? "approved" : "rejected"; });
+  BL.unshift({ t: new Date().toLocaleString("vi-VN"), pl: p.ten, bn: `Đấu giá ${fromClub.replace("FC ", "")} → ${winner.data.toClub.replace("FC ", "")} ${winner.data.offer.toLocaleString()}▪`, by: CU.un });
+  if (BL.length > 60) BL.length = 60;
+  sd();
+  toast(`Đã chốt: ${p.ten} về ${winner.data.toClub.replace("FC ", "")}`, "success");
+  renderTransferPage();
+  rTable();
+  rStats();
+}
+
+function cancelSale(pid) {
+  const p = DATA.find((x) => x.id === pid);
+  if (!p) return;
+  if (!isAdmin() && !(isPresident() && CU.club === p.doi)) { toast("Không có quyền hủy rao bán", "warn"); return; }
+  if (!confirm(`Hủy rao bán ${p.ten}?`)) return;
+  p.forSale = false;
+  delete p.listPrice;
+  delete p.saleDeadline;
+  SUGG = SUGG.filter((s) => !(s.type === "bid" && s.data.pid === pid && s.status === "pending"));
+  sd();
+  toast(`Đã hủy rao bán ${p.ten}`, "success");
+  renderAuctionBoard();
+  rTable();
+}
+
+// ── LOAN SYSTEM ───────────────────────────────────────────────────────────────
+function submitLoanRequest() {
+  if (!isPresident()) { toast("Chỉ Chủ tịch CLB mới có thể yêu cầu mượn cầu thủ", "warn"); return; }
+  if (!isTransferWindowOpen()) { toast("Cửa sổ chuyển nhượng đang đóng", "warn"); return; }
+  const pid = parseInt(document.getElementById("loanPlayerSel").value, 10);
+  const loanUntil = document.getElementById("loanUntil").value;
+  const fee = parseInt(document.getElementById("loanFee").value, 10) || 0;
+  const p = DATA.find((x) => x.id === pid);
+  if (!p) { toast("Chọn cầu thủ hợp lệ", "warn"); return; }
+  if (p.doi === CU.club) { toast("Không thể mượn cầu thủ của CLB mình", "warn"); return; }
+  if (p.onLoan) { toast("Cầu thủ này đang được mượn ở nơi khác", "warn"); return; }
+  if (!loanUntil) { toast("Chọn ngày trả về", "warn"); return; }
+  if (fee > 0 && getClubFunds(CU.club) < fee) { toast(`Quỹ ${CU.club.replace("FC ", "")} không đủ trả phí mượn`, "warn"); return; }
+  SUGG.push({ id: `ln_${Date.now()}`, type: "loan", data: { pid, pname: p.ten, fromClub: p.doi, toClub: CU.club, loanUntil, fee }, by: CU.un, status: "pending", time: new Date().toLocaleString("vi-VN") });
+  sd();
+  document.getElementById("loanUntil").value = "";
+  document.getElementById("loanFee").value = "";
+  toast(`Đã gửi yêu cầu mượn ${p.ten}`, "success");
+  renderMySugg();
+}
+
+function approveLoan(suggId) {
+  if (!isAdmin()) return;
+  const s = SUGG.find((x) => x.id === suggId);
+  if (!s || s.type !== "loan") return;
+  const p = DATA.find((x) => x.id === s.data.pid);
+  if (!p) { toast("Không tìm thấy cầu thủ", "warn"); return; }
+  if (p.onLoan) { toast("Cầu thủ đang được mượn ở nơi khác", "warn"); return; }
+  if (s.data.fee > 0 && getClubFunds(s.data.toClub) < s.data.fee) { toast(`${s.data.toClub.replace("FC ", "")} không đủ quỹ trả phí mượn`, "warn"); return; }
+  if (s.data.fee > 0) {
+    debitClub(s.data.toClub, s.data.fee);
+    creditClub(s.data.fromClub, s.data.fee);
+  }
+  p.loanOriginalClub = p.doi;
+  p.doi = s.data.toClub;
+  p.onLoan = true;
+  p.loanedTo = s.data.toClub;
+  p.loanUntil = s.data.loanUntil;
+  s.status = "approved";
+  LOANS.push({ id: `lr_${Date.now()}`, pid: p.id, pname: p.ten, fromClub: s.data.fromClub, toClub: s.data.toClub, loanUntil: s.data.loanUntil, fee: s.data.fee, by: CU.un, time: new Date().toLocaleString("vi-VN") });
+  BL.unshift({ t: new Date().toLocaleString("vi-VN"), pl: p.ten, bn: `Cho mượn ${s.data.fromClub.replace("FC ", "")} → ${s.data.toClub.replace("FC ", "")} đến ${s.data.loanUntil}`, by: CU.un });
+  if (BL.length > 60) BL.length = 60;
+  sd();
+  toast(`Đã duyệt mượn ${p.ten}`, "success");
+  renderTransferPage();
+  rTable();
+  rStats();
+  renderSuggApprove();
+}
+
+function recallLoan(loanId) {
+  const loan = LOANS.find((l) => l.id === loanId);
+  if (!loan) return;
+  if (!isAdmin() && !(isPresident() && CU.club === loan.fromClub)) { toast("Không có quyền triệu hồi", "warn"); return; }
+  if (!confirm(`Triệu hồi ${loan.pname} về ${loan.fromClub.replace("FC ", "")}?`)) return;
+  const p = DATA.find((x) => x.id === loan.pid);
+  if (p && p.onLoan) {
+    p.doi = p.loanOriginalClub || loan.fromClub;
+    p.onLoan = false;
+    delete p.loanedTo;
+    delete p.loanUntil;
+    delete p.loanOriginalClub;
+  }
+  LOANS = LOANS.filter((l) => l.id !== loanId);
+  BL.unshift({ t: new Date().toLocaleString("vi-VN"), pl: loan.pname, bn: `Triệu hồi ${loan.toClub.replace("FC ", "")} → ${loan.fromClub.replace("FC ", "")}`, by: CU.un });
+  if (BL.length > 60) BL.length = 60;
+  sd();
+  toast(`Đã triệu hồi ${loan.pname}`, "success");
+  renderTransferPage();
+  rTable();
+  rStats();
+}
+
+function renderActiveLoans() {
+  const el = document.getElementById("activeLoans");
+  if (!el) return;
+  const loanReqEl = document.getElementById("loanRequestSection");
+  if (loanReqEl) {
+    const show = isPresident() && isTransferWindowOpen();
+    loanReqEl.style.display = show ? "block" : "none";
+    if (show) {
+      const loanSel = document.getElementById("loanPlayerSel");
+      if (loanSel) loanSel.innerHTML = DATA.filter((p) => p.doi !== CU.club && !p.onLoan).map((p) => `<option value="${p.id}">${esc(p.ten)} (${esc(p.doi.replace("FC ", ""))})</option>`).join("");
+    }
+  }
+  if (!LOANS.length) {
+    el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:10px;border:1px dashed #ccc;border-radius:4px">Không có hợp đồng mượn nào đang hiệu lực</div>';
+    return;
+  }
+  el.innerHTML = LOANS.map((loan) => {
+    const expired = new Date(loan.loanUntil) < new Date();
+    const canRecall = isAdmin() || (isPresident() && CU.club === loan.fromClub);
+    return `<div style="padding:10px;border:1px solid ${expired ? "#e74c3c" : "#ddd"};border-radius:4px;background:${expired ? "#fdf2f2" : "#fff"};margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><div style="font-weight:600">${esc(loan.pname)}: ${esc(loan.fromClub.replace("FC ", ""))} → ${esc(loan.toClub.replace("FC ", ""))}</div><div style="font-size:12px;color:#666;margin-top:2px">Trả về: ${esc(loan.loanUntil)}${expired ? ' <span style="color:#c0392b;font-weight:600">(Hết hạn — cần triệu hồi)</span>' : ""} · Phí: ${(loan.fee || 0).toLocaleString()}▪</div></div>${canRecall ? `<button class="btn-danger" style="font-size:12px;padding:5px 10px" onclick="recallLoan('${loan.id}')">Triệu hồi</button>` : ""}</div>`;
+  }).join("");
+}
+
 function approveSugg(id) {
   const s = SUGG.find((x) => x.id === id);
   if (!s) return;
@@ -1010,7 +1258,8 @@ function renderMySugg() {
     if (s.type === "player") return `<div class="sugg-item"><span>${esc(s.data.ten)} (${esc(s.data.doi.replace("FC ", ""))})</span><span class="sugg-status ss-${s.status}">${s.status === "pending" ? "Chờ" : s.status === "approved" ? "✅" : "❌"}</span></div>`;
     if (s.type === "bonus") return `<div class="sugg-item"><span>${esc(s.data.pname)} — ${esc(s.data.bname)} +${s.data.amt}▪</span><span class="sugg-status ss-${s.status}">${s.status === "pending" ? "Chờ" : s.status === "approved" ? "✅" : "❌"}</span></div>`;
     if (s.type === "purchase") return `<div class="sugg-item"><span>Yêu cầu mua ${esc(s.data.pname)} từ ${esc(s.data.fromClub.replace("FC ", ""))} về ${esc(s.data.toClub.replace("FC ", ""))} — ${esc(s.data.offer)}▪${s.data.note ? ` · ${esc(s.data.note)}` : ""}</span><span class="sugg-status ss-${s.status}">${s.status === "pending" ? "Chờ" : s.status === "approved" ? "✅" : "❌"}</span></div>`;
-    if (s.type === "listing") return `<div class="sugg-item"><span>Rao bán ${esc(s.data.pname)} (${esc(s.data.club.replace("FC ", ""))}) giá ${esc(s.data.price)}▪</span><span class="sugg-status ss-active">Đang rao</span></div>`;
+    if (s.type === "bid") return `<div class="sugg-item"><span>Đặt giá ${esc(s.data.pname)} — ${esc(s.data.offer)}▪ (${esc(s.data.toClub.replace("FC ",""))})</span><span class="sugg-status ss-${s.status}">${s.status === "pending" ? "Đang đấu" : s.status === "approved" ? "✅ Thắng" : "❌ Thua"}</span></div>`;
+    if (s.type === "loan") return `<div class="sugg-item"><span>Mượn ${esc(s.data.pname)} từ ${esc(s.data.fromClub.replace("FC ",""))} đến ${esc(s.data.loanUntil)}</span><span class="sugg-status ss-${s.status}">${s.status === "pending" ? "Chờ" : s.status === "approved" ? "✅" : "❌"}</span></div>`;
     return "";
   }).join("") || '<div style="font-size:12px;color:#aaa;padding:6px">Chưa có đề xuất</div>';
   const pEl = document.getElementById("myPlayerSuggList");
@@ -1025,16 +1274,26 @@ function renderSuggApprove() {
   if (!isAdmin()) return;
   const pending = SUGG.filter((s) => s.status === "pending");
   const mkRow = (s) => {
-    const title = s.type === "player" ? `${esc(s.data.ten)} | ${esc(s.data.doi)} | ${s.data.val}▪` : s.type === "bonus" ? `${esc(s.data.pname)} — ${esc(s.data.bname)} +${s.data.amt}▪` : `Yêu cầu mua ${esc(s.data.pname)} từ ${esc(s.data.fromClub)} về ${esc(s.data.toClub)} — ${esc(s.data.offer)}▪`;
-    return `<div class="sugg-item" style="flex-direction:column;align-items:flex-start;gap:5px"><div><b>${title}</b></div><div style="font-size:10px;color:#666">${esc(s.by)} · ${esc(s.time)}${s.data?.note ? ` · ${esc(s.data.note)}` : ""}</div><div style="display:flex;gap:5px"><button class="bsm bsm-ok" onclick="approveSugg('${s.id}')">✅ Duyệt</button><button class="bsm bsm-del" onclick="rejectSugg('${s.id}')">❌ Từ chối</button></div></div>`;
+    let title = "";
+    let approveBtn = `<button class="bsm bsm-ok" onclick="approveSugg('${s.id}')">✅ Duyệt</button>`;
+    if (s.type === "player") title = `${esc(s.data.ten)} | ${esc(s.data.doi)} | ${s.data.val}▪`;
+    else if (s.type === "bonus") title = `${esc(s.data.pname)} — ${esc(s.data.bname)} +${s.data.amt}▪`;
+    else if (s.type === "purchase") title = `Mua ${esc(s.data.pname)} từ ${esc(s.data.fromClub.replace("FC ",""))} → ${esc(s.data.toClub.replace("FC ",""))} — ${esc(s.data.offer)}▪`;
+    else if (s.type === "loan") {
+      title = `Mượn ${esc(s.data.pname)} (${esc(s.data.fromClub.replace("FC ",""))}) → ${esc(s.data.toClub.replace("FC ",""))} đến ${esc(s.data.loanUntil)} · phí ${s.data.fee||0}▪`;
+      approveBtn = `<button class="bsm bsm-ok" onclick="approveLoan('${s.id}')">✅ Duyệt</button>`;
+    }
+    return `<div class="sugg-item" style="flex-direction:column;align-items:flex-start;gap:5px"><div><b>${title}</b></div><div style="font-size:10px;color:#666">${esc(s.by)} · ${esc(s.time)}${s.data?.note ? ` · ${esc(s.data.note)}` : ""}</div><div style="display:flex;gap:5px">${approveBtn}<button class="bsm bsm-del" onclick="rejectSugg('${s.id}')">❌ Từ chối</button></div></div>`;
   };
   const empty = '<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Không có đề xuất</div>';
   const pEl = document.getElementById("suggPlayerApprove");
   const bEl = document.getElementById("suggBonusApprove");
   const rEl = document.getElementById("suggPurchaseApprove");
+  const lEl = document.getElementById("suggLoanApprove");
   if (pEl) pEl.innerHTML = pending.filter((s) => s.type === "player").map(mkRow).join("") || empty;
   if (bEl) bEl.innerHTML = pending.filter((s) => s.type === "bonus").map(mkRow).join("") || empty;
   if (rEl) rEl.innerHTML = pending.filter((s) => s.type === "purchase").map(mkRow).join("") || empty;
+  if (lEl) lEl.innerHTML = pending.filter((s) => s.type === "loan").map(mkRow).join("") || empty;
 }
 
 async function rAdmin() {
@@ -1420,15 +1679,22 @@ function sellPlayer(id) {
       toast("Chỉ được bán cầu thủ của CLB bạn đang điều hành.", "warn");
       return;
     }
-    const price = parseInt(prompt(`Nhập giá rao bán cho ${p.ten}`, p.val), 10);
+    if (!isTransferWindowOpen()) {
+      toast("Cửa sổ chuyển nhượng đang đóng — không thể rao bán", "warn");
+      return;
+    }
+    const price = parseInt(prompt(`Nhập giá sàn đấu giá cho ${p.ten}`, p.val), 10);
     if (Number.isNaN(price) || price <= 0) {
       toast("Giá rao bán không hợp lệ", "warn");
       return;
     }
+    const days = parseInt(prompt("Thời hạn đấu giá (số ngày, mặc định 3):", "3"), 10) || 3;
+    const deadline = new Date(Date.now() + days * 86400000).toISOString();
     p.forSale = true;
     p.listPrice = price;
+    p.saleDeadline = deadline;
     sd();
-    toast(`${p.ten} đã được rao bán giá ${price}▪`, "success");
+    toast(`${p.ten} rao bán giá sàn ${price}▪ · hạn ${days} ngày`, "success");
     rTable();
     renderMySugg();
     return;
@@ -1605,4 +1871,24 @@ Object.assign(window, {
   savePassword,
   addPlayer,
   deletePlayer,
+  makePresident,
+  addTournament,
+  addTournamentMatch,
+  updateMatchResult,
+  finishTournament,
+  deleteTournament,
+  selectTournament,
+  toggleTransferWindow,
+  placeBid,
+  closeAuction,
+  cancelSale,
+  submitLoanRequest,
+  approveLoan,
+  recallLoan,
+  sellPlayer,
+  requestPurchase,
+  submitPurchaseRequest,
+  renderTransferPage,
+  adjustClubFund,
+  promptAdjustClubFund,
 });
