@@ -538,7 +538,9 @@ function rTable() {
     const pos = p.pos || "CM";
     const dis = ce ? "" : "disabled";
     const editBtn = ce ? `<button class="edbtn" onclick="openModal(${p.id})">Sửa</button>` : '<span style="font-size:11px;color:#ddd">—</span>';
-    const sellBtn = canSell ? `<button class="bsm bsm-del" onclick="sellPlayer(${p.id})" style="margin-left:6px">Bán</button>` : "";
+    const isPresOwner = CU?.role === "president" && CU.club === p.doi;
+    const sellLbl = isPresOwner ? (p.forSale ? "Hủy rao" : "Rao bán") : "Bán";
+    const sellBtn = canSell ? `<button class="bsm bsm-del" onclick="sellPlayer(${p.id})" style="margin-left:6px">${sellLbl}</button>` : "";
     return `<tr><td class="rnk ${rk}">${rd}</td><td><div class="pcell"><div class="av" style="background:${tl};color:${tdk};border-color:${tc}">${ini(p.ten)}</div><div><div class="pname">${esc(p.ten)}</div><div class="pso">${p.so ? `#${esc(p.so)}` : ""}</div></div></div></td><td><span class="tbadge" style="background:${tl};color:${tdk}">${esc(p.doi.replace("FC ", ""))}</span></td><td><span class="pos-badge pos-${pos}">${pos}</span></td><td><span class="stars">${stars(p.rating)}</span></td><td class="vcell" style="color:${tc}">${p.val.toLocaleString()} ${sq(9)}</td><td><input type="number" class="vi" id="vi-${p.id}" value="${p.val}" ${dis} onchange="qSave(${p.id},this)" oninput="this.classList.add('changed')" title="${ce ? "Nhập giá trị" : "Không có quyền"}"></td><td>${idxB(p)}</td><td><div class="bar-bg"><div class="bar-fill" style="width:${bw}%;background:${tc}"></div></div></td><td><div style="display:flex;align-items:center;gap:4px">${editBtn}${sellBtn}</div></td></tr>`;
   }).join("");
 }
@@ -945,25 +947,13 @@ function requestPurchase(id) {
 }
 
 function renderPurchaseForm() {
-  const section = document.getElementById("purchaseRequestSection");
-  if (!section) return;
-  section.style.display = (isAdmin() || isPresident()) ? "block" : "none";
+  const adminSection = document.getElementById("adminDirectSection");
+  if (!isAdmin()) { if (adminSection) adminSection.style.display = "none"; return; }
+  if (adminSection) adminSection.style.display = "block";
   const pl = document.getElementById("purchasePlayerSel");
+  if (pl) pl.innerHTML = DATA.filter((p) => p.doi).map((p) => `<option value="${p.id}">${esc(p.ten)} (${esc(p.doi.replace("FC ", ""))})${p.forSale ? " ★" : ""}</option>`).join("");
   const club = document.getElementById("purchaseBuyerClub");
-  if (pl) {
-    pl.innerHTML = DATA.filter((p) => p.doi).map((p) => `<option value="${p.id}">${esc(p.ten)} (${esc(p.doi.replace("FC ", ""))})${p.forSale ? " — Rao bán" : ""}</option>`).join("");
-  }
-  if (club) {
-    if (isPresident() && CU?.club) {
-      club.innerHTML = `<option value="${esc(CU.club)}">${esc(CU.club)}</option>`;
-      club.disabled = true;
-      document.getElementById("purchaseNoteHeader").textContent = `Bạn đang là Chủ tịch ${CU.club}. Điền giá và gửi yêu cầu mua.`;
-    } else {
-      club.innerHTML = TEAMS.map((t) => `<option value="${t}">${esc(t)}</option>`).join("");
-      club.disabled = false;
-      document.getElementById("purchaseNoteHeader").textContent = "Chỉ Chủ tịch CLB hoặc Admin mới xem/form giao dịch mua/bán.";
-    }
-  }
+  if (club) { club.innerHTML = TEAMS.map((t) => `<option value="${t}">${esc(t)}</option>`).join(""); club.disabled = false; }
 }
 
 // ── TRANSFER WINDOW ──────────────────────────────────────────────────────────
@@ -979,7 +969,7 @@ function toggleTransferWindow() {
 
 function renderTransferPage() {
   renderTransferWindowBanner();
-  renderAuctionBoard();
+  renderSaleListings();
   renderActiveLoans();
   renderPurchaseForm();
   renderMySugg();
@@ -1011,79 +1001,51 @@ function formatTimeLeft(deadline) {
   return `${Math.floor(diff / 86400000)} ngày còn lại`;
 }
 
-function renderAuctionBoard() {
-  const el = document.getElementById("auctionBoard");
+function renderSaleListings() {
+  const el = document.getElementById("saleListings");
   if (!el) return;
   const forSale = DATA.filter((p) => p.forSale);
   if (!forSale.length) {
-    el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:10px;border:1px dashed #ccc;border-radius:4px">Chưa có cầu thủ nào đang rao bán</div>';
+    el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:14px;border:1px dashed #ccc;border-radius:4px;text-align:center">Chưa có cầu thủ nào đang rao bán<br><span style="font-size:11px">Chủ tịch CLB rao bán cầu thủ từ trang Thị trường</span></div>';
     return;
   }
   el.innerHTML = forSale.map((p) => {
-    const bids = SUGG.filter((s) => s.type === "bid" && s.data.pid === p.id && s.status === "pending").sort((a, b) => b.data.offer - a.data.offer);
-    const topBid = bids[0];
     const expired = p.saleDeadline && new Date(p.saleDeadline) < new Date();
     const timeLeft = p.saleDeadline ? formatTimeLeft(p.saleDeadline) : "Không giới hạn";
-    const alreadyBid = bids.find((b) => b.data.toClub === CU?.club);
-    const canBid = isTransferWindowOpen() && isPresident() && CU.club !== p.doi && !expired;
-    const minBid = (topBid?.data.offer || p.listPrice || p.val) + (topBid ? 1 : 0);
-    const bidHtml = canBid ? `<div style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="number" class="form-input" id="bidAmt-${p.id}" style="width:90px" placeholder="${minBid}" min="${minBid}"><button class="btn-save" style="font-size:12px;padding:5px 10px" onclick="placeBid(${p.id})">Đặt giá</button>${alreadyBid ? `<span style="font-size:11px;color:#888">Giá của bạn: ${alreadyBid.data.offer.toLocaleString()}▪</span>` : ""}</div>` : "";
-    const closeBtn = isAdmin() && topBid ? `<button class="btn-save" style="background:#2c3e50;font-size:12px;padding:5px 10px" onclick="closeAuction(${p.id})">Chốt đấu giá</button>` : "";
-    const cancelBtn = (isAdmin() || (isPresident() && CU.club === p.doi)) ? `<button class="btn-danger" style="font-size:12px;padding:5px 8px" onclick="cancelSale(${p.id})">Hủy rao</button>` : "";
-    const bidsHtml = bids.length
-      ? `<div style="margin-top:6px;font-size:12px"><strong>Giá đang đặt:</strong><ul style="margin:3px 0 0;padding-left:16px">${bids.map((b, i) => `<li style="color:${i === 0 ? "#27ae60" : "#555"}">${esc(b.data.toClub.replace("FC ", ""))}: ${b.data.offer.toLocaleString()}▪ <span style="color:#aaa">(${esc(b.by)})</span></li>`).join("")}</ul></div>`
-      : `<div style="font-size:12px;color:#aaa;margin-top:4px">Chưa có giá đặt</div>`;
-    return `<div style="padding:12px;border:1px solid ${expired ? "#e74c3c" : "#ddd"};border-radius:4px;background:${expired ? "#fdf2f2" : "#fff"};margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px"><div style="flex:1"><div style="font-weight:600">${esc(p.ten)} <span style="font-size:12px;color:#888">(${esc(p.doi.replace("FC ", ""))})</span></div><div style="font-size:12px;color:#555;margin-top:3px">Giá sàn: ${(p.listPrice || p.val).toLocaleString()}▪ · Hạn: ${timeLeft}${expired ? ' <span style="color:#c0392b;font-weight:600">(Hết hạn)</span>' : ""}</div>${bidsHtml}${bidHtml}</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start">${closeBtn}${cancelBtn}</div></div></div>`;
+    const canOffer = isTransferWindowOpen() && isPresident() && CU.club !== p.doi && !expired;
+    const canCancel = isAdmin() || (isPresident() && CU.club === p.doi);
+    const myOffer = SUGG.find((s) => s.type === "purchase" && s.data.pid === p.id && s.data.toClub === CU?.club && s.status === "pending");
+    const allOffers = SUGG.filter((s) => s.type === "purchase" && s.data.pid === p.id && s.status === "pending").sort((a, b) => b.data.offer - a.data.offer);
+    const offersHtml = isAdmin() && allOffers.length
+      ? `<div style="margin-top:8px;font-size:12px;background:#f0f8f0;border-radius:3px;padding:8px 10px;border:1px solid #c3e6cb"><strong>📬 Đề nghị mua (${allOffers.length}):</strong><ul style="margin:5px 0 0;padding-left:18px">${allOffers.map((o, i) => `<li style="color:${i === 0 ? "#27ae60" : "#555"};margin-bottom:3px">${esc(o.data.toClub.replace("FC ", ""))}: <strong>${o.data.offer.toLocaleString()}▪</strong><span style="font-size:10px;color:#aaa;margin-left:4px">(${esc(o.by)})</span><button class="bsm bsm-ok" onclick="approveSugg('${o.id}')" style="font-size:10px;padding:1px 6px;margin-left:6px">✅</button><button class="bsm bsm-del" onclick="rejectSugg('${o.id}')" style="font-size:10px;padding:1px 5px">❌</button></li>`).join("")}</ul></div>`
+      : "";
+    const offerForm = canOffer
+      ? `<div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap"><input type="number" id="offerAmt-${p.id}" class="form-input" style="width:130px" placeholder="Giá đề nghị ▪" min="1"><button class="btn-save" style="font-size:12px;padding:6px 14px" onclick="submitOfferForPlayer(${p.id})">Đề nghị mua</button>${myOffer ? `<span style="font-size:11px;color:#e67e22;margin-left:4px">Đề nghị hiện tại: ${myOffer.data.offer.toLocaleString()}▪ (chờ duyệt)</span>` : ""}</div>`
+      : (!isTransferWindowOpen() && isPresident() && CU.club !== p.doi ? '<div style="font-size:12px;color:#c0392b;margin-top:6px">🔒 Cửa sổ chuyển nhượng đang đóng</div>' : (isPresident() && CU.club === p.doi ? '<div style="font-size:12px;color:#888;margin-top:6px;font-style:italic">Đây là cầu thủ CLB bạn đang rao bán</div>' : ""));
+    const cancelBtn = canCancel ? `<button class="btn-danger" style="font-size:12px;padding:5px 10px;white-space:nowrap" onclick="cancelSale(${p.id})">Hủy rao</button>` : "";
+    const tc = TC[p.doi] || "#888"; const tl = TL[p.doi] || "#eee"; const tdk = TD[p.doi] || "#333";
+    return `<div style="padding:12px 14px;border:1px solid ${expired ? "#e74c3c" : "#ddd"};border-left:4px solid ${expired ? "#e74c3c" : tc};border-radius:4px;background:#fff;margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px"><span style="font-weight:600;font-size:14px">${esc(p.ten)}</span><span style="background:${tl};color:${tdk};padding:2px 8px;border-radius:2px;font-size:11px;font-weight:600">${esc(p.doi.replace("FC ", ""))}</span><span class="pos-badge pos-${p.pos || "CM"}">${p.pos || "CM"}</span><span class="stars" style="font-size:11px">${stars(p.rating)}</span></div><div style="font-size:12px;color:#555">Giá rao: <strong style="color:${tc}">${(p.listPrice || p.val).toLocaleString()}▪</strong> · Hạn: ${timeLeft}${expired ? ' <strong style="color:#c0392b">(Hết hạn)</strong>' : ""}</div>${offersHtml}${offerForm}</div><div style="flex-shrink:0">${cancelBtn}</div></div></div>`;
   }).join("");
 }
 
-function placeBid(pid) {
-  if (!isPresident()) { toast("Chỉ Chủ tịch CLB mới có thể đặt giá", "warn"); return; }
+function submitOfferForPlayer(pid) {
+  if (!isPresident()) { toast("Chỉ Chủ tịch CLB mới có thể đề nghị mua", "warn"); return; }
   if (!isTransferWindowOpen()) { toast("Cửa sổ chuyển nhượng đang đóng", "warn"); return; }
   const p = DATA.find((x) => x.id === pid);
   if (!p || !p.forSale) { toast("Cầu thủ không còn rao bán", "warn"); return; }
-  if (p.doi === CU.club) { toast("Không thể đặt giá cầu thủ CLB mình", "warn"); return; }
-  if (p.saleDeadline && new Date(p.saleDeadline) < new Date()) { toast("Phiên đấu giá đã hết hạn", "warn"); return; }
-  const amtInput = document.getElementById(`bidAmt-${pid}`);
-  const offer = parseInt(amtInput?.value, 10);
-  if (!offer || offer <= 0) { toast("Nhập giá đặt hợp lệ", "warn"); return; }
-  const current = SUGG.filter((s) => s.type === "bid" && s.data.pid === pid && s.status === "pending").sort((a, b) => b.data.offer - a.data.offer)[0];
-  const minOffer = current ? current.data.offer + 1 : (p.listPrice || p.val);
-  if (offer < minOffer) { toast(`Giá đặt phải ít nhất ${minOffer.toLocaleString()}▪`, "warn"); return; }
-  if (getClubFunds(CU.club) < offer) { toast(`CLB bạn không đủ quỹ (${getClubFunds(CU.club).toLocaleString()}▪)`, "warn"); return; }
-  SUGG = SUGG.filter((s) => !(s.type === "bid" && s.data.pid === pid && s.data.toClub === CU.club && s.status === "pending"));
-  SUGG.push({ id: `bid_${Date.now()}`, type: "bid", data: { pid, pname: p.ten, fromClub: p.doi, toClub: CU.club, offer }, by: CU.un, status: "pending", time: new Date().toLocaleString("vi-VN") });
+  if (p.doi === CU.club) { toast("Không thể mua cầu thủ CLB mình", "warn"); return; }
+  if (p.saleDeadline && new Date(p.saleDeadline) < new Date()) { toast("Thời hạn rao bán đã hết", "warn"); return; }
+  const amtInput = document.getElementById(`offerAmt-${pid}`);
+  const offer = parseInt(amtInput?.value, 10) || (p.listPrice || p.val);
+  if (!offer || offer <= 0) { toast("Nhập giá đề nghị hợp lệ", "warn"); return; }
+  if (getClubFunds(CU.club) < offer) { toast(`Quỹ ${CU.club.replace("FC ", "")} không đủ (${getClubFunds(CU.club).toLocaleString()}▪)`, "warn"); return; }
+  SUGG = SUGG.filter((s) => !(s.type === "purchase" && s.data.pid === pid && s.data.toClub === CU.club && s.status === "pending"));
+  SUGG.push({ id: `pur_${Date.now()}`, type: "purchase", data: { pid, pname: p.ten, fromClub: p.doi, toClub: CU.club, offer }, by: CU.un, status: "pending", time: new Date().toLocaleString("vi-VN") });
   sd();
   if (amtInput) amtInput.value = "";
-  toast(`Đã đặt ${offer.toLocaleString()}▪ cho ${p.ten}`, "success");
-  renderAuctionBoard();
+  toast(`Đã gửi đề nghị mua ${p.ten} — ${offer.toLocaleString()}▪`, "success");
+  renderSaleListings();
   renderMySugg();
-}
-
-function closeAuction(pid) {
-  if (!isAdmin()) return;
-  const p = DATA.find((x) => x.id === pid);
-  if (!p) return;
-  const bids = SUGG.filter((s) => s.type === "bid" && s.data.pid === pid && s.status === "pending").sort((a, b) => b.data.offer - a.data.offer);
-  const winner = bids[0];
-  if (!winner) { toast("Không có giá đặt nào để chốt", "warn"); return; }
-  if (!confirm(`Chốt: ${winner.data.toClub.replace("FC ", "")} mua ${p.ten} — ${winner.data.offer.toLocaleString()}▪?`)) return;
-  if (getClubFunds(winner.data.toClub) < winner.data.offer) { toast(`${winner.data.toClub.replace("FC ", "")} không đủ quỹ`, "warn"); return; }
-  const fromClub = p.doi;
-  debitClub(winner.data.toClub, winner.data.offer);
-  creditClub(fromClub, winner.data.offer);
-  p.doi = winner.data.toClub;
-  p.forSale = false;
-  delete p.listPrice;
-  delete p.saleDeadline;
-  bids.forEach((b) => { b.status = b.id === winner.id ? "approved" : "rejected"; });
-  BL.unshift({ t: new Date().toLocaleString("vi-VN"), pl: p.ten, bn: `Đấu giá ${fromClub.replace("FC ", "")} → ${winner.data.toClub.replace("FC ", "")} ${winner.data.offer.toLocaleString()}▪`, by: CU.un });
-  if (BL.length > 60) BL.length = 60;
-  sd();
-  toast(`Đã chốt: ${p.ten} về ${winner.data.toClub.replace("FC ", "")}`, "success");
-  renderTransferPage();
-  rTable();
-  rStats();
 }
 
 function cancelSale(pid) {
@@ -1094,10 +1056,10 @@ function cancelSale(pid) {
   p.forSale = false;
   delete p.listPrice;
   delete p.saleDeadline;
-  SUGG = SUGG.filter((s) => !(s.type === "bid" && s.data.pid === pid && s.status === "pending"));
+  SUGG = SUGG.filter((s) => !((s.type === "bid" || s.type === "purchase") && s.data.pid === pid && s.status === "pending"));
   sd();
   toast(`Đã hủy rao bán ${p.ten}`, "success");
-  renderAuctionBoard();
+  renderSaleListings();
   rTable();
 }
 
@@ -1684,6 +1646,7 @@ function sellPlayer(id) {
       toast("Chỉ được bán cầu thủ của CLB bạn đang điều hành.", "warn");
       return;
     }
+    if (p.forSale) { cancelSale(id); return; }
     if (!isTransferWindowOpen()) {
       toast("Cửa sổ chuyển nhượng đang đóng — không thể rao bán", "warn");
       return;
@@ -1884,8 +1847,7 @@ Object.assign(window, {
   deleteTournament,
   selectTournament,
   toggleTransferWindow,
-  placeBid,
-  closeAuction,
+  submitOfferForPlayer,
   cancelSale,
   submitLoanRequest,
   approveLoan,
