@@ -56,23 +56,27 @@ const BONUSES = [
   { id: "hvtm", lbl: "HV Thủ môn", tag: "+20", type: "gk", amt: 20, cls: "gk", desc: "Thủ môn +20 mỗi lần tăng chỉ số", by: "superadmin" },
 ];
 
-const VER = "v8";
+function safeJSON(str, fallback) { try { return JSON.parse(str); } catch { return fallback; } }
+
+const VER = "v9";
 if (localStorage.getItem("tmV") !== VER) {
   localStorage.removeItem("tmD");
   localStorage.removeItem("tmBL");
   localStorage.removeItem("tmSUGG");
   localStorage.removeItem("tmCB");
+  localStorage.removeItem("tmLoans");
+  localStorage.removeItem("tmTW");
   localStorage.setItem("tmV", VER);
 }
 
-let DATA = JSON.parse(localStorage.getItem("tmD") || JSON.stringify(INIT));
-let BL = JSON.parse(localStorage.getItem("tmBL") || "[]");
-let SUGG = JSON.parse(localStorage.getItem("tmSUGG") || "[]");
-let CUSTOM_BONUSES = JSON.parse(localStorage.getItem("tmCB") || "[]");
-let TOURNAMENTS = JSON.parse(localStorage.getItem("tmT") || "[]");
-let CLUB_FUNDS = JSON.parse(localStorage.getItem("tmF") || "{}");
-let LOANS = JSON.parse(localStorage.getItem("tmLoans") || "[]");
-let TRANSFER_WINDOW = JSON.parse(localStorage.getItem("tmTW") || '{"open":false}');
+let DATA = safeJSON(localStorage.getItem("tmD"), INIT);
+let BL = safeJSON(localStorage.getItem("tmBL"), []);
+let SUGG = safeJSON(localStorage.getItem("tmSUGG"), []);
+let CUSTOM_BONUSES = safeJSON(localStorage.getItem("tmCB"), []);
+let TOURNAMENTS = safeJSON(localStorage.getItem("tmT"), []);
+let CLUB_FUNDS = safeJSON(localStorage.getItem("tmF"), {});
+let LOANS = safeJSON(localStorage.getItem("tmLoans"), []);
+let TRANSFER_WINDOW = safeJSON(localStorage.getItem("tmTW"), { open: false });
 let USERS = initUsers();
 let CU = null;
 let cF = "all";
