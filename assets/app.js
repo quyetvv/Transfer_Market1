@@ -512,7 +512,7 @@ function rStats() {
     const avg = ps.length ? Math.round(tv / ps.length) : 0;
     html += `<div class="stat-box ${cls[i]}"><div class="stat-lbl">${t}</div><div class="stat-val" style="color:${TC[t]}">${tv.toLocaleString()} ${sq(10)}</div><div class="stat-sub">${ps.length} cầu thủ · TB ${avg.toLocaleString()} ${sq(8)}</div></div>`;
   });
-  document.getElementById("statsRow").innerHTML = html;
+  const statsEl = document.getElementById("statsRow"); if (statsEl) statsEl.innerHTML = html;
 }
 
 function rTable() {
@@ -801,6 +801,7 @@ function applyB(bid) {
 
 function rBH() {
   const el = document.getElementById("bonusHist");
+  if (!el) return;
   el.innerHTML = BL.length ? BL.slice(0, 20).map((x) => `<div class="hist-item"><span><b>${esc(x.pl)}</b> — ${esc(x.bn)}</span><span style="color:#aaa;font-size:10px">${esc(x.t)} · ${esc(x.by)}</span></div>`).join("") : '<div style="font-size:12px;color:#aaa;text-align:center;padding:10px">Chưa có lịch sử</div>';
 }
 
