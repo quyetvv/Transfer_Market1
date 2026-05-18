@@ -222,8 +222,8 @@ async function loadFromFirebase() {
     rTable();
     rCharts();
     renderTournaments();
-    renderPurchaseForm();
   }
+  if (cur === "Chuyển nhượng") renderPurchaseForm();
   if (cur === "Thưởng sau trận") rBonus();
   if (cur === "Giải đấu") renderTournamentPage();
   if (cur === "Admin") {
@@ -448,15 +448,15 @@ function showPage(p) {
     const sp = document.getElementById("suggPlayerSection");
     if (sp) sp.style.display = CU && CU.role === "guest" ? "block" : "none";
     renderMySugg();
+    renderTournaments();
+  }
+  if (p === "Transfer") {
+    renderPurchaseForm();
   }
   if (p === "Bonus") rBonus();
   if (p === "Admin") {
     rAdmin();
     renderSuggApprove();
-  }
-  if (p === "Market") {
-    renderTournaments();
-    renderPurchaseForm();
   }
   if (p === "Tournament") {
     renderTournamentPage();
