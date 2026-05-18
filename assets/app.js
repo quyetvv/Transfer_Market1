@@ -436,10 +436,10 @@ function enterApp() {
 }
 
 function showPage(p) {
-  ["Market", "Tournament", "Bonus", "Admin"].forEach((x) => { document.getElementById(`page${x}`).style.display = "none"; });
-  document.getElementById(`page${p}`).style.display = "block";
+  ["Market", "Transfer", "Tournament", "Bonus", "Admin"].forEach((x) => { const el = document.getElementById(`page${x}`); if (el) el.style.display = "none"; });
+  document.getElementById(`page${p}`)?.style.display = "block";
   document.querySelectorAll(".nav-item").forEach((n) => n.classList.remove("active"));
-  const idx = { Market: 0, Tournament: 1, Bonus: 2, Admin: 3 }[p];
+  const idx = { Market: 0, Transfer: 1, Tournament: 2, Bonus: 3, Admin: 4 }[p];
   document.querySelectorAll(".nav-item")[idx]?.classList.add("active");
   if (p === "Market") {
     rStats();
