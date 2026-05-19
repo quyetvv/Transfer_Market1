@@ -535,8 +535,7 @@ function rTable() {
     const pos = p.pos || "CM";
     const dis = ce ? "" : "disabled";
     const editBtn = ce ? `<button class="edbtn" onclick="openModal(${p.id})">Sửa</button>` : '<span style="font-size:11px;color:#ddd">—</span>';
-    const isPresOwner = CU?.role === "president" && CU.club === p.doi;
-    const sellLbl = isPresOwner ? (p.forSale ? "Hủy rao" : "Rao bán") : "Bán";
+    const sellLbl = p.forSale ? "Hủy rao" : "Rao bán";
     const sellBtn = canSell ? `<button class="bsm bsm-del" onclick="sellPlayer(${p.id})" style="margin-left:6px">${sellLbl}</button>` : "";
     return `<tr><td class="rnk ${rk}">${rd}</td><td><div class="pcell"><div class="av" style="background:${tl};color:${tdk};border-color:${tc}">${ini(p.ten)}</div><div><div class="pname">${esc(p.ten)}</div><div class="pso">${p.so ? `#${esc(p.so)}` : ""}</div></div></div></td><td><span class="tbadge" style="background:${tl};color:${tdk}">${esc(p.doi.replace("FC ", ""))}</span></td><td><span class="pos-badge pos-${pos}">${pos}</span></td><td><span class="stars">${stars(p.rating)}</span></td><td class="vcell" style="color:${tc}">${p.val.toLocaleString()} ${sq(9)}</td><td><input type="number" class="vi" id="vi-${p.id}" value="${p.val}" ${dis} onchange="qSave(${p.id},this)" oninput="this.classList.add('changed')" title="${ce ? "Nhập giá trị" : "Không có quyền"}"></td><td>${idxB(p)}</td><td><div class="bar-bg"><div class="bar-fill" style="width:${bw}%;background:${tc}"></div></div></td><td><div style="display:flex;align-items:center;gap:4px">${editBtn}${sellBtn}</div></td></tr>`;
   }).join("");
@@ -690,7 +689,6 @@ function rBonus() {
   if (sb) sb.style.display = CU && CU.role === "guest" ? "block" : "none";
   const sSel = document.getElementById("suggPlayerSel");
   if (sSel) sSel.innerHTML = DATA.map((p) => `<option value="${p.id}">${esc(p.ten)} (${esc(p.doi.replace("FC ", ""))})</option>`).join("");
-  renderMySugg();
   const opts = DATA.map((p) => `<option value="${p.id}">${esc(p.ten)} (${esc(p.doi.replace("FC ", ""))} ${p.val.toLocaleString()}▪)</option>`).join("");
   const teamOpts = TEAMS.map((t) => `<option value="${t}">${t}</option>`).join("");
   const allBonuses = [...BONUSES, ...CUSTOM_BONUSES];
@@ -701,6 +699,7 @@ function rBonus() {
     bgEl.insertAdjacentHTML("beforeend", '<div class="bcard" style="border:2px dashed #ccc;background:#fafafa;display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:90px" onclick="document.getElementById(\'addBonusForm\').style.display=\'grid\'"><div style="text-align:center;color:#aaa"><div style="font-size:22px">+</div><div style="font-size:12px">Thêm loại thưởng</div></div></div><div id="addBonusForm" style="display:none;grid-column:1/-1;border:1px solid var(--bd);border-radius:4px;padding:12px;background:#f9f9f9"><div style="font-weight:600;font-size:13px;margin-bottom:9px">Thêm loại thưởng mới</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:9px"><div><label class="form-label">Tên thưởng</label><input class="form-input" id="cbLbl" placeholder="vd: Hattrick"></div><div><label class="form-label">Giá trị +</label><input class="form-input" type="number" id="cbAmt" placeholder="30"></div><div><label class="form-label">Mô tả</label><input class="form-input" id="cbDesc" placeholder="Ghi chú..."></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px"><div><label class="form-label">Loại thưởng</label><select class="form-input" id="cbScope"><option value="individual">Cá nhân</option><option value="team">Đội</option><option value="all">Tất cả</option></select></div><div><label class="form-label">Loại trừ</label><input class="form-input" id="cbExclude" placeholder="Tên cầu thủ, đội..."></div></div><div style="display:flex;gap:8px"><button class="btn-save" style="padding:7px 14px;font-size:13px" onclick="addCustomBonus()">Thêm</button><button class="btn-cancel" style="padding:7px 14px;font-size:13px" onclick="document.getElementById(\'addBonusForm\').style.display=\'none\'">Huỷ</button></div></div>');
   }
   rBH();
+  renderMySugg();
 }
 
 function addCustomBonus() {
@@ -1218,12 +1217,16 @@ function rejectSugg(id) {
 function renderMySugg() {
   if (!CU) return;
   const mine = SUGG.filter((s) => s.by === CU.un).slice(-5).reverse();
+  const fc = (v) => (v || "").replace("FC ", "");
   const html = (arr, type) => arr.filter((s) => s.type === type).map((s) => {
-    if (s.type === "player") return `<div class="sugg-item"><span>${esc(s.data.ten)} (${esc(s.data.doi.replace("FC ", ""))})</span><span class="sugg-status ss-${s.status}">${s.status === "pending" ? "Chờ" : s.status === "approved" ? "✅" : "❌"}</span></div>`;
-    if (s.type === "bonus") return `<div class="sugg-item"><span>${esc(s.data.pname)} — ${esc(s.data.bname)} +${s.data.amt}▪</span><span class="sugg-status ss-${s.status}">${s.status === "pending" ? "Chờ" : s.status === "approved" ? "✅" : "❌"}</span></div>`;
-    if (s.type === "purchase") return `<div class="sugg-item"><span>Yêu cầu mua ${esc(s.data.pname)} từ ${esc(s.data.fromClub.replace("FC ", ""))} về ${esc(s.data.toClub.replace("FC ", ""))} — ${esc(s.data.offer)}▪${s.data.note ? ` · ${esc(s.data.note)}` : ""}</span><span class="sugg-status ss-${s.status}">${s.status === "pending" ? "Chờ" : s.status === "approved" ? "✅" : "❌"}</span></div>`;
-    if (s.type === "bid") return `<div class="sugg-item"><span>Đặt giá ${esc(s.data.pname)} — ${esc(s.data.offer)}▪ (${esc(s.data.toClub.replace("FC ",""))})</span><span class="sugg-status ss-${s.status}">${s.status === "pending" ? "Đang đấu" : s.status === "approved" ? "✅ Thắng" : "❌ Thua"}</span></div>`;
-    if (s.type === "loan") return `<div class="sugg-item"><span>Mượn ${esc(s.data.pname)} từ ${esc(s.data.fromClub.replace("FC ",""))} đến ${esc(s.data.loanUntil)}</span><span class="sugg-status ss-${s.status}">${s.status === "pending" ? "Chờ" : s.status === "approved" ? "✅" : "❌"}</span></div>`;
+    try {
+      const st = s.status === "pending" ? "Chờ" : s.status === "approved" ? "✅" : "❌";
+      if (s.type === "player") return `<div class="sugg-item"><span>${esc(s.data.ten)} (${esc(s.data.doi ? fc(s.data.doi) : "")})</span><span class="sugg-status ss-${s.status}">${st}</span></div>`;
+      if (s.type === "bonus") return `<div class="sugg-item"><span>${esc(s.data.pname)} — ${esc(s.data.bname)} +${s.data.amt}▪</span><span class="sugg-status ss-${s.status}">${st}</span></div>`;
+      if (s.type === "purchase") return `<div class="sugg-item"><span>Yêu cầu mua ${esc(s.data.pname)} từ ${esc(fc(s.data.fromClub))} về ${esc(fc(s.data.toClub))} — ${esc(s.data.offer)}▪${s.data.note ? ` · ${esc(s.data.note)}` : ""}</span><span class="sugg-status ss-${s.status}">${st}</span></div>`;
+      if (s.type === "bid") return `<div class="sugg-item"><span>Đặt giá ${esc(s.data.pname)} — ${esc(s.data.offer)}▪ (${esc(fc(s.data.toClub))})</span><span class="sugg-status ss-${s.status}">${s.status === "pending" ? "Đang đấu" : s.status === "approved" ? "✅ Thắng" : "❌ Thua"}</span></div>`;
+      if (s.type === "loan") return `<div class="sugg-item"><span>Mượn ${esc(s.data.pname)} từ ${esc(fc(s.data.fromClub))} đến ${esc(s.data.loanUntil)}</span><span class="sugg-status ss-${s.status}">${st}</span></div>`;
+    } catch { return ""; }
     return "";
   }).join("") || '<div style="font-size:12px;color:#aaa;padding:6px">Chưa có đề xuất</div>';
   const pEl = document.getElementById("myPlayerSuggList");
@@ -1638,43 +1641,41 @@ function deletePlayer() {
 function sellPlayer(id) {
   const p = DATA.find((x) => x.id === id);
   if (!p) return;
+
+  // Hủy rao nếu đang rao bán
+  if (p.forSale) {
+    cancelSale(id);
+    return;
+  }
+
+  // Kiểm tra quyền
   if (isPresident()) {
     if (CU.club !== p.doi) {
-      toast("Chỉ được bán cầu thủ của CLB bạn đang điều hành.", "warn");
+      toast("Chỉ được rao bán cầu thủ của CLB bạn đang điều hành.", "warn");
       return;
     }
-    if (p.forSale) { cancelSale(id); return; }
     if (!isTransferWindowOpen()) {
       toast("Cửa sổ chuyển nhượng đang đóng — không thể rao bán", "warn");
       return;
     }
-    const price = parseInt(prompt(`Nhập giá sàn đấu giá cho ${p.ten}`, p.val), 10);
-    if (Number.isNaN(price) || price <= 0) {
-      toast("Giá rao bán không hợp lệ", "warn");
-      return;
-    }
-    const days = parseInt(prompt("Thời hạn đấu giá (số ngày, mặc định 3):", "3"), 10) || 3;
-    const deadline = new Date(Date.now() + days * 86400000).toISOString();
-    p.forSale = true;
-    p.listPrice = price;
-    p.saleDeadline = deadline;
-    sd();
-    toast(`${p.ten} rao bán giá sàn ${price}▪ · hạn ${days} ngày`, "success");
-    rTable();
-    renderMySugg();
+  }
+
+  // Đặt rao bán (tất cả role có quyền đều đi qua đây)
+  const price = parseInt(prompt(`Nhập giá sàn rao bán cho ${p.ten}`, p.val), 10);
+  if (Number.isNaN(price) || price <= 0) {
+    toast("Giá rao bán không hợp lệ", "warn");
     return;
   }
-  if (!confirm(`Bán cầu thủ "${p.ten}" và cộng ${p.val.toLocaleString()} ▪ cho ${p.doi}?`)) return;
-  const team = p.doi;
-  creditClub(team, p.val);
-  DATA = DATA.filter((x) => x.id !== id);
-  BL.unshift({ t: new Date().toLocaleString("vi-VN"), pl: p.ten, bn: `Bán cầu thủ ${p.val.toLocaleString()}▪`, by: CU.un });
-  if (BL.length > 60) BL.length = 60;
+  const days = parseInt(prompt("Thời hạn rao bán (số ngày, mặc định 7):", "7"), 10) || 7;
+  const deadline = new Date(Date.now() + days * 86400000).toISOString();
+  p.forSale = true;
+  p.listPrice = price;
+  p.saleDeadline = deadline;
   sd();
-  toast(`Đã bán ${p.ten}. ${team} nhận ${p.val.toLocaleString()} ▪`, "success");
+  toast(`${p.ten} rao bán giá sàn ${price.toLocaleString()}▪ · hạn ${days} ngày`, "success");
   rTable();
-  rStats();
-  rBH();
+  renderSaleListings();
+  renderMySugg();
 }
 
 function exportData() {
