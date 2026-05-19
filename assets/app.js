@@ -66,7 +66,13 @@ const BONUSES = [
 
 function safeJSON(str, fallback) {
   if (!str) return fallback;
-  try { return JSON.parse(str); } catch { return fallback; }
+  try {
+    const v = JSON.parse(str);
+    return (v !== null && v !== undefined) ? v : fallback;
+  } catch { return fallback; }
+}
+function toArr(v) {
+  return Array.isArray(v) ? v : (v && typeof v === "object") ? Object.values(v) : [];
 }
 
 const VER = "v10";
@@ -82,14 +88,14 @@ if (localStorage.getItem("tmV") !== VER) {
   localStorage.setItem("tmV", VER);
 }
 
-let DATA = safeJSON(localStorage.getItem("tmD"), INIT);
+let DATA = toArr(safeJSON(localStorage.getItem("tmD"), INIT));
 if (!Array.isArray(DATA) || DATA.length === 0) DATA = [...INIT];
-let BL = safeJSON(localStorage.getItem("tmBL"), []);
-let SUGG = safeJSON(localStorage.getItem("tmSUGG"), []);
-let CUSTOM_BONUSES = safeJSON(localStorage.getItem("tmCB"), []);
-let TOURNAMENTS = safeJSON(localStorage.getItem("tmT"), []);
-let CLUB_FUNDS = safeJSON(localStorage.getItem("tmF"), {});
-let LOANS = safeJSON(localStorage.getItem("tmLoans"), []);
+let BL = toArr(safeJSON(localStorage.getItem("tmBL"), []));
+let SUGG = toArr(safeJSON(localStorage.getItem("tmSUGG"), []));
+let CUSTOM_BONUSES = toArr(safeJSON(localStorage.getItem("tmCB"), []));
+let TOURNAMENTS = toArr(safeJSON(localStorage.getItem("tmT"), []));
+let CLUB_FUNDS = safeJSON(localStorage.getItem("tmF"), {}) || {};
+let LOANS = toArr(safeJSON(localStorage.getItem("tmLoans"), []));
 let TRANSFER_WINDOW = safeJSON(localStorage.getItem("tmTW"), { open: false });
 let USERS = initUsers();
 let CU = null;
@@ -200,7 +206,7 @@ async function loadFromFirebase() {
       fbGet("data/loans"),
       fbGet("data/transferWindow"),
     ]);
-    const toArr = (v) => Array.isArray(v) ? v : v && typeof v === "object" ? Object.values(v) : null;
+    const fbToArr = (v) => Array.isArray(v) ? v : v && typeof v === "object" ? Object.values(v) : null;
     const fbPArr = Array.isArray(fbP) ? fbP : fbP && typeof fbP === "object" ? Object.values(fbP) : null;
     if (fbPArr && fbPArr.length > 0) {
       DATA = fbPArr;
@@ -220,19 +226,19 @@ async function loadFromFirebase() {
       }
       fbOk = true;
     }
-    const fbBLArr = toArr(fbBL);
+    const fbBLArr = fbToArr(fbBL);
     if (fbBLArr) { BL = fbBLArr; localStorage.setItem("tmBL", JSON.stringify(BL)); }
-    const fbSUGGArr = toArr(fbSUGG);
+    const fbSUGGArr = fbToArr(fbSUGG);
     if (fbSUGGArr) { SUGG = fbSUGGArr; localStorage.setItem("tmSUGG", JSON.stringify(SUGG)); }
-    const fbCBArr = toArr(fbCB);
+    const fbCBArr = fbToArr(fbCB);
     if (fbCBArr) { CUSTOM_BONUSES = fbCBArr; localStorage.setItem("tmCB", JSON.stringify(CUSTOM_BONUSES)); }
-    const fbTArr = toArr(fbT);
+    const fbTArr = fbToArr(fbT);
     if (fbTArr) { TOURNAMENTS = fbTArr; localStorage.setItem("tmT", JSON.stringify(TOURNAMENTS)); }
     if (fbF && typeof fbF === "object" && !Array.isArray(fbF)) {
       CLUB_FUNDS = fbF;
       localStorage.setItem("tmF", JSON.stringify(CLUB_FUNDS));
     }
-    const fbLoansArr = toArr(fbLoans);
+    const fbLoansArr = fbToArr(fbLoans);
     if (fbLoansArr) { LOANS = fbLoansArr; localStorage.setItem("tmLoans", JSON.stringify(LOANS)); }
     if (fbTW && typeof fbTW === "object") {
       TRANSFER_WINDOW = fbTW;
