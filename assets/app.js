@@ -47,13 +47,13 @@ function h(s) {
 }
 
 const BONUSES = [
-  { id: "vdich", lbl: "Vô địch", tag: "🏆 Đội", type: "team_win", amt: 20, cls: "", desc: "GK/HV +35▪, còn lại +20▪", by: "superadmin" },
-  { id: "vuabt", lbl: "Vua bàn thắng", tag: "+50", type: "val", amt: 50, cls: "special", desc: "Cầu thủ ghi nhiều bàn nhất +50", by: "superadmin" },
-  { id: "vuakt", lbl: "Vua kiến tạo", tag: "+25", type: "val", amt: 25, cls: "special", desc: "Cầu thủ kiến tạo nhiều nhất +25", by: "superadmin" },
-  { id: "cxsnhat", lbl: "CĐ xuất sắc nhất", tag: "+50", type: "val", amt: 50, cls: "special", desc: "Cầu thủ XS nhất mùa giải +50", by: "superadmin" },
-  { id: "qbv", lbl: "Quả bóng vàng", tag: "+50", type: "qbv", amt: 50, cls: "special", desc: "QBV +50 (giới hạn 3 mùa/cầu thủ)", by: "superadmin" },
-  { id: "puskas", lbl: "Puskas", tag: "+20", type: "val", amt: 20, cls: "special", desc: "Bàn thắng đẹp nhất +20", by: "superadmin" },
-  { id: "hvtm", lbl: "HV Thủ môn", tag: "+20", type: "gk", amt: 20, cls: "gk", desc: "Thủ môn +20 mỗi lần tăng chỉ số", by: "superadmin" },
+  { id: "vdich", lbl: "Vô địch", tag: "🏆 Đội", type: "team_win", scope: "team", amt: 20, cls: "", desc: "GK/HV +35▪, còn lại +20▪", by: "superadmin" },
+  { id: "vuabt", lbl: "Vua bàn thắng", tag: "+50", type: "val", scope: "individual", amt: 50, cls: "special", desc: "Cầu thủ ghi nhiều bàn nhất +50", by: "superadmin" },
+  { id: "vuakt", lbl: "Vua kiến tạo", tag: "+25", type: "val", scope: "individual", amt: 25, cls: "special", desc: "Cầu thủ kiến tạo nhiều nhất +25", by: "superadmin" },
+  { id: "cxsnhat", lbl: "CĐ xuất sắc nhất", tag: "+50", type: "val", scope: "individual", amt: 50, cls: "special", desc: "Cầu thủ XS nhất mùa giải +50", by: "superadmin" },
+  { id: "qbv", lbl: "Quả bóng vàng", tag: "+50", type: "qbv", scope: "individual", amt: 50, cls: "special", desc: "QBV +50 (giới hạn 3 mùa/cầu thủ)", by: "superadmin" },
+  { id: "puskas", lbl: "Puskas", tag: "+20", type: "val", scope: "individual", amt: 20, cls: "special", desc: "Bàn thắng đẹp nhất +20", by: "superadmin" },
+  { id: "hvtm", lbl: "HV Thủ môn", tag: "+20", type: "gk", scope: "individual", amt: 20, cls: "gk", desc: "Thủ môn +20 mỗi lần tăng chỉ số", by: "superadmin" },
 ];
 
 function safeJSON(str, fallback) { try { return JSON.parse(str); } catch { return fallback; } }
