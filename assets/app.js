@@ -1,3 +1,11 @@
+window.onerror = function(msg, src, _line, _col, err) {
+  console.error("App crash:", msg, src, err);
+  try {
+    const el = document.getElementById("toast");
+    if (el) { el.textContent = "Lỗi ứng dụng: " + msg; el.className = "toast warn"; el.classList.add("show"); setTimeout(() => el.classList.remove("show"), 4000); }
+  } catch {}
+};
+
 const INIT = [
   { id: 1, stt: 1, so: "09", ten: "TDũng", pos: "GK", doi: "FC Mobile", rating: 2, val: 100, idx: { toc: 0, suc: 0, ky: 0, tong: 0 }, qbv: 0, by: "superadmin" },
   { id: 2, stt: 2, so: "07", ten: "BKhang", pos: "CB", doi: "FC Mobile", rating: 3, val: 150, idx: { toc: 0, suc: 0, ky: 0, tong: 0 }, qbv: 0, by: "superadmin" },
@@ -56,7 +64,10 @@ const BONUSES = [
   { id: "hvtm", lbl: "HV Thủ môn", tag: "+20", type: "gk", scope: "individual", amt: 20, cls: "gk", desc: "Thủ môn +20 mỗi lần tăng chỉ số", by: "superadmin" },
 ];
 
-function safeJSON(str, fallback) { try { return JSON.parse(str); } catch { return fallback; } }
+function safeJSON(str, fallback) {
+  if (!str) return fallback;
+  try { return JSON.parse(str); } catch { return fallback; }
+}
 
 const VER = "v10";
 if (localStorage.getItem("tmV") !== VER) {
@@ -99,7 +110,7 @@ const TD = { "FC Mobile": "#0c3460", "FC Bựa Dâm": "#1e8449", "FC Sĩ Gái": 
 const TEAMS = ["FC Mobile", "FC Bựa Dâm", "FC Sĩ Gái"];
 
 function initUsers() {
-  const us = JSON.parse(localStorage.getItem("tmU") || "[]");
+  const us = safeJSON(localStorage.getItem("tmU"), []);
   const vq = us.find((u) => u.un === "vquyetthang");
   if (!vq) us.push({ un: "vquyetthang", h: ADMIN_H, role: "superadmin", ok: true, ep: [] });
   else {
@@ -1795,7 +1806,7 @@ document.getElementById("lPass").addEventListener("keydown", (e) => {
 (function restoreSession() {
   const savedUn = sessionStorage.getItem("tmSession");
   if (!savedUn) return;
-  USERS = JSON.parse(localStorage.getItem("tmU") || "[]");
+  USERS = safeJSON(localStorage.getItem("tmU"), []);
   const usr = USERS.find((x) => x.un === savedUn && x.ok);
   if (!usr) return;
   if (usr.un === "vquyetthang") usr.role = "superadmin";
