@@ -91,6 +91,7 @@ let c1 = null;
 let c2 = null;
 let _vdichTeam = "";
 let selectedTournamentId = null;
+let _fbLoaded = false;
 
 const TC = { "FC Mobile": "#185FA5", "FC Bựa Dâm": "#27ae60", "FC Sĩ Gái": "#8e44ad" };
 const TL = { "FC Mobile": "#d6eaf8", "FC Bựa Dâm": "#d5f5e3", "FC Sĩ Gái": "#e8daef" };
@@ -132,7 +133,8 @@ async function fbGet(path) {
     const { db, ref, get } = window._fb;
     const s = await get(ref(db, path));
     return s.exists() ? s.val() : null;
-  } catch {
+  } catch (e) {
+    console.warn(`fbGet(${path}):`, e?.code || e?.message || e);
     return null;
   }
 }
@@ -161,18 +163,20 @@ function sd() {
   localStorage.setItem("tmLoans", JSON.stringify(LOANS));
   localStorage.setItem("tmTW", JSON.stringify(TRANSFER_WINDOW));
   fbSet("data/players", DATA);
-  fbSet("data/bonusLog", BL.length ? BL : null);
-  fbSet("data/suggestions", SUGG.length ? SUGG : null);
-  fbSet("data/customBonuses", CUSTOM_BONUSES.length ? CUSTOM_BONUSES : null);
-  fbSet("data/tournaments", TOURNAMENTS.length ? TOURNAMENTS : null);
-  fbSet("data/clubFunds", Object.keys(CLUB_FUNDS).length ? CLUB_FUNDS : null);
-  fbSet("data/loans", LOANS.length ? LOANS : null);
+  // Không ghi null lên Firebase trước khi load xong — tránh xóa mất dữ liệu cũ
+  if (_fbLoaded || BL.length) fbSet("data/bonusLog", BL.length ? BL : null);
+  if (_fbLoaded || SUGG.length) fbSet("data/suggestions", SUGG.length ? SUGG : null);
+  if (_fbLoaded || CUSTOM_BONUSES.length) fbSet("data/customBonuses", CUSTOM_BONUSES.length ? CUSTOM_BONUSES : null);
+  if (_fbLoaded || TOURNAMENTS.length) fbSet("data/tournaments", TOURNAMENTS.length ? TOURNAMENTS : null);
+  if (_fbLoaded || Object.keys(CLUB_FUNDS).length) fbSet("data/clubFunds", Object.keys(CLUB_FUNDS).length ? CLUB_FUNDS : null);
+  if (_fbLoaded || LOANS.length) fbSet("data/loans", LOANS.length ? LOANS : null);
   fbSet("data/transferWindow", TRANSFER_WINDOW);
   renderClubFundBadge();
 }
 
 async function loadFromFirebase() {
   showLoading(true);
+  let fbOk = false;
   try {
     const [fbP, fbU, fbBL, fbSUGG, fbCB, fbT, fbF, fbLoans, fbTW] = await Promise.all([
       fbGet("data/players"),
@@ -185,30 +189,26 @@ async function loadFromFirebase() {
       fbGet("data/loans"),
       fbGet("data/transferWindow"),
     ]);
+    const toArr = (v) => Array.isArray(v) ? v : v && typeof v === "object" ? Object.values(v) : null;
     const fbPArr = Array.isArray(fbP) ? fbP : fbP && typeof fbP === "object" ? Object.values(fbP) : null;
     if (fbPArr && fbPArr.length > 0) {
       DATA = fbPArr;
       localStorage.setItem("tmD", JSON.stringify(DATA));
+      fbOk = true;
     } else if (!DATA.length) {
       DATA = [...INIT];
     }
     if (Array.isArray(fbU) && fbU.length > 0) {
       const vq = fbU.find((u) => u.un === "vquyetthang");
-      if (vq) {
-        vq.role = "superadmin";
-        vq.ok = true;
-      }
+      if (vq) { vq.role = "superadmin"; vq.ok = true; }
       USERS = fbU;
       localStorage.setItem("tmU", JSON.stringify(USERS));
       if (CU) {
         const fresh = USERS.find((u) => u.un === CU.un);
-        if (fresh) {
-          if (fresh.un === "vquyetthang") fresh.role = "superadmin";
-          CU = fresh;
-        }
+        if (fresh) { if (fresh.un === "vquyetthang") fresh.role = "superadmin"; CU = fresh; }
       }
+      fbOk = true;
     }
-    const toArr = (v) => Array.isArray(v) ? v : v && typeof v === "object" ? Object.values(v) : null;
     const fbBLArr = toArr(fbBL);
     if (fbBLArr) { BL = fbBLArr; localStorage.setItem("tmBL", JSON.stringify(BL)); }
     const fbSUGGArr = toArr(fbSUGG);
@@ -230,9 +230,12 @@ async function loadFromFirebase() {
     if (!fbPArr || fbPArr.length === 0) fbSet("data/players", DATA);
     if (Array.isArray(fbU) && fbU.length === 0) USERS.forEach((u) => fbSetUser(u));
   } catch (e) {
-    console.warn("Firebase load error:", e);
+    console.warn("Firebase load error:", e?.code || e?.message || e);
+    toast("Lỗi kết nối Firebase — dùng dữ liệu cục bộ", "warn");
   }
+  _fbLoaded = true;
   showLoading(false);
+  if (fbOk) toast("Đã đồng bộ Firebase", "success");
   const cur = document.querySelector(".nav-item.active")?.textContent?.trim() || "";
   if (cur === "Thị trường") {
     rStats();
