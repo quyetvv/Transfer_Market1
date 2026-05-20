@@ -98,6 +98,7 @@ let CLUB_FUNDS = safeJSON(localStorage.getItem("tmF"), {}) || {};
 let LOANS = toArr(safeJSON(localStorage.getItem("tmLoans"), []));
 let AUCTIONS = toArr(safeJSON(localStorage.getItem("tmAuctions"), []));
 let HALL_OF_FAME = toArr(safeJSON(localStorage.getItem("tmHOF"), []));
+let ACTIVITY_LOG = toArr(safeJSON(localStorage.getItem("tmAL"), []));
 let TRANSFER_WINDOW = safeJSON(localStorage.getItem("tmTW"), { open: false });
 let USERS = initUsers();
 let CU = null;
@@ -193,6 +194,8 @@ function sd() {
   if (_fbLoaded || LOANS.length) fbSet("data/loans", LOANS.length ? LOANS : null);
   if (_fbLoaded || AUCTIONS.length) fbSet("data/auctions", AUCTIONS.length ? AUCTIONS : null);
   if (_fbLoaded || HALL_OF_FAME.length) fbSet("data/hallOfFame", HALL_OF_FAME.length ? HALL_OF_FAME : null);
+  if (_fbLoaded || ACTIVITY_LOG.length) fbSet("data/activityLog", ACTIVITY_LOG.length ? ACTIVITY_LOG : null);
+  localStorage.setItem("tmAL", JSON.stringify(ACTIVITY_LOG));
   fbSet("data/transferWindow", TRANSFER_WINDOW);
   renderClubFundBadge();
   updateNavBadges();
@@ -202,7 +205,7 @@ async function loadFromFirebase() {
   showLoading(true);
   let fbOk = false;
   try {
-    const [fbP, fbU, fbBL, fbSUGG, fbCB, fbT, fbF, fbLoans, fbTW, fbAucs, fbHOF] = await Promise.all([
+    const [fbP, fbU, fbBL, fbSUGG, fbCB, fbT, fbF, fbLoans, fbTW, fbAucs, fbHOF, fbAL] = await Promise.all([
       fbGet("data/players"),
       fbGetUsers(),
       fbGet("data/bonusLog"),
@@ -214,6 +217,7 @@ async function loadFromFirebase() {
       fbGet("data/transferWindow"),
       fbGet("data/auctions"),
       fbGet("data/hallOfFame"),
+      fbGet("data/activityLog"),
     ]);
     const fbToArr = (v) => Array.isArray(v) ? v : v && typeof v === "object" ? Object.values(v) : null;
     const fbPArr = Array.isArray(fbP) ? fbP : fbP && typeof fbP === "object" ? Object.values(fbP) : null;
@@ -253,6 +257,8 @@ async function loadFromFirebase() {
     if (fbAucsArr) { AUCTIONS = fbAucsArr; localStorage.setItem("tmAuctions", JSON.stringify(AUCTIONS)); }
     const fbHOFArr = fbToArr(fbHOF);
     if (fbHOFArr) { HALL_OF_FAME = fbHOFArr; localStorage.setItem("tmHOF", JSON.stringify(HALL_OF_FAME)); }
+    const fbALArr = fbToArr(fbAL);
+    if (fbALArr) { ACTIVITY_LOG = fbALArr; localStorage.setItem("tmAL", JSON.stringify(ACTIVITY_LOG)); }
     if (fbTW && typeof fbTW === "object") {
       TRANSFER_WINDOW = fbTW;
       localStorage.setItem("tmTW", JSON.stringify(TRANSFER_WINDOW));
@@ -330,6 +336,124 @@ function updateNavBadges() {
   const count = SUGG.filter((s) => s.status === "pending").length;
   badge.style.display = count > 0 ? "inline-block" : "none";
   badge.textContent = count > 9 ? "9+" : count;
+}
+
+function logActivity(type, text, icon = "📋", actor = null) {
+  ACTIVITY_LOG.unshift({ id: `al_${Date.now()}`, type, text, icon, actor: actor || CU?.un || "system", t: new Date().toLocaleString("vi-VN"), ts: Date.now() });
+  if (ACTIVITY_LOG.length > 50) ACTIVITY_LOG.length = 50;
+}
+
+function renderActivityFeed() {
+  const el = document.getElementById("activityFeed");
+  if (!el) return;
+  const cnt = document.getElementById("activityCount");
+  if (cnt) cnt.textContent = ACTIVITY_LOG.length ? `(${ACTIVITY_LOG.length} sự kiện)` : "";
+  if (!ACTIVITY_LOG.length) {
+    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:12px;padding:14px">Chưa có hoạt động nào được ghi lại</div>';
+    return;
+  }
+  el.innerHTML = ACTIVITY_LOG.slice(0, 30).map((ev) => `
+    <div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #f2f2f2;align-items:flex-start">
+      <span style="font-size:16px;flex-shrink:0;line-height:1.4">${ev.icon || "📋"}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;color:#222;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(ev.text)}</div>
+        <div style="font-size:10px;color:#bbb;margin-top:1px">${esc(ev.t)} · <strong>${esc(ev.actor || "system")}</strong></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function autoFinalizeExpiredAuctions() {
+  const now = Date.now();
+  let changed = false;
+  AUCTIONS.forEach((auc) => {
+    if (auc.status !== "active") return;
+    if (new Date(auc.deadline) > now) return;
+    const p = DATA.find((x) => x.id === auc.pid);
+    if (!auc.bids || !auc.bids.length) {
+      auc.status = "cancelled";
+      if (p) { p.inAuction = false; p.forSale = false; }
+      logActivity("auction_no_bids", `Đấu giá ${auc.pname} hết hạn — không có giá thầu`, "🚫", "system");
+      changed = true;
+      return;
+    }
+    const winner = auc.bids.find((b) => getClubFunds(b.club) >= b.amount) || auc.bids[0];
+    if (!p || getClubFunds(winner.club) < winner.amount) {
+      auc.status = "cancelled";
+      if (p) { p.inAuction = false; p.forSale = false; }
+      logActivity("auction_failed", `Đấu giá ${auc.pname} thất bại — CLB thắng không đủ quỹ`, "❌", "system");
+      changed = true;
+      return;
+    }
+    debitClub(winner.club, winner.amount);
+    creditClub(auc.fromClub, winner.amount);
+    p.doi = winner.club;
+    p.inAuction = false;
+    p.forSale = false;
+    delete p.listPrice;
+    auc.status = "ended";
+    auc.winner = winner.club;
+    auc.finalPrice = winner.amount;
+    BL.unshift({ t: new Date().toLocaleString("vi-VN"), pl: auc.pname, bn: `Đấu giá: ${auc.fromClub.replace("FC ", "")} → ${winner.club.replace("FC ", "")} +${winner.amount}▪`, by: "auto" });
+    if (BL.length > 60) BL.length = 60;
+    const winnerPresident = USERS.find((u) => u.role === "president" && u.club === winner.club);
+    if (winnerPresident) checkAndAwardAchievement(winnerPresident.un, "auction_win");
+    logActivity("auction_ended", `${auc.pname} → ${winner.club.replace("FC ", "")} · ${winner.amount.toLocaleString()}▪`, "🏆", "system");
+    changed = true;
+  });
+  if (changed) { sd(); rTable(); renderTransferPage(); rStats(); }
+}
+
+let _rlSetup = false;
+function setupRealtimeListeners() {
+  if (_rlSetup || !window._fb) return;
+  _rlSetup = true;
+  const { db, ref, onValue } = window._fb;
+  onValue(ref(db, "data/auctions"), (snap) => {
+    const val = snap.exists() ? snap.val() : null;
+    AUCTIONS = Array.isArray(val) ? val : (val && typeof val === "object") ? Object.values(val) : [];
+    localStorage.setItem("tmAuctions", JSON.stringify(AUCTIONS));
+    autoFinalizeExpiredAuctions();
+    renderAuctionListings();
+    renderPresidentDashboard();
+  });
+  onValue(ref(db, "data/activityLog"), (snap) => {
+    const val = snap.exists() ? snap.val() : null;
+    const arr = Array.isArray(val) ? val : (val && typeof val === "object") ? Object.values(val) : [];
+    if (arr.length) {
+      ACTIVITY_LOG = arr;
+      localStorage.setItem("tmAL", JSON.stringify(ACTIVITY_LOG));
+      renderActivityFeed();
+    }
+  });
+  onValue(ref(db, "data/transferWindow"), (snap) => {
+    const val = snap.exists() ? snap.val() : null;
+    if (val && typeof val === "object") {
+      TRANSFER_WINDOW = val;
+      localStorage.setItem("tmTW", JSON.stringify(TRANSFER_WINDOW));
+      renderTransferPage();
+    }
+  });
+}
+
+function generateRoundRobinMatches(startDate) {
+  const teams = [...TEAMS];
+  const matches = [];
+  let ts = new Date(startDate).getTime();
+  const week = 7 * 86400000;
+  for (let i = 0; i < teams.length; i++) {
+    for (let j = i + 1; j < teams.length; j++) {
+      matches.push({ id: `m_${Date.now()}_${i}_${j}`, date: new Date(ts).toISOString().split("T")[0], homeTeam: teams[i], awayTeam: teams[j], homeScore: null, awayScore: null });
+      ts += week;
+    }
+  }
+  for (let i = 0; i < teams.length; i++) {
+    for (let j = i + 1; j < teams.length; j++) {
+      matches.push({ id: `m_${Date.now()}_r${i}_${j}`, date: new Date(ts).toISOString().split("T")[0], homeTeam: teams[j], awayTeam: teams[i], homeScore: null, awayScore: null });
+      ts += week;
+    }
+  }
+  return matches;
 }
 
 function renderClubFundBadge() {
@@ -499,8 +623,13 @@ function enterApp() {
   updateAchievementBtn();
   updateNavBadges();
   showPage("Market");
-  if (window._fbReady) loadFromFirebase();
-  else window.addEventListener("fbReady", () => loadFromFirebase(), { once: true });
+  autoFinalizeExpiredAuctions();
+  setInterval(autoFinalizeExpiredAuctions, 5 * 60 * 1000);
+  if (window._fbReady) {
+    loadFromFirebase().then(() => setupRealtimeListeners());
+  } else {
+    window.addEventListener("fbReady", () => loadFromFirebase().then(() => setupRealtimeListeners()), { once: true });
+  }
 }
 
 function showPage(p) {
@@ -512,6 +641,7 @@ function showPage(p) {
   document.querySelectorAll(".nav-item")[idx]?.classList.add("active");
   if (p === "Market") {
     renderPresidentDashboard();
+    renderActivityFeed();
     rStats();
     rTable();
     rCharts();
@@ -1171,6 +1301,7 @@ function approveLoan(suggId) {
   if (loanPres2) checkAndAwardAchievement(loanPres2.un, "loan_boss");
   BL.unshift({ t: new Date().toLocaleString("vi-VN"), pl: p.ten, bn: `Cho mượn ${s.data.fromClub.replace("FC ", "")} → ${s.data.toClub.replace("FC ", "")} đến ${s.data.loanUntil}`, by: CU.un });
   if (BL.length > 60) BL.length = 60;
+  logActivity("loan", `${p.ten} mượn ${s.data.fromClub.replace("FC ", "")} → ${s.data.toClub.replace("FC ", "")} đến ${s.data.loanUntil}`, "🔄");
   sd();
   toast(`Đã duyệt mượn ${p.ten}`, "success");
   renderTransferPage();
@@ -1356,6 +1487,7 @@ function finalizeAuction(auctionId) {
   if (BL.length > 60) BL.length = 60;
   const winnerPresident = USERS.find((u) => u.role === "president" && u.club === winner.club);
   if (winnerPresident) checkAndAwardAchievement(winnerPresident.un, "auction_win");
+  logActivity("auction_ended", `${auc.pname}: ${auc.fromClub.replace("FC ", "")} → ${winner.club.replace("FC ", "")} · ${winner.amount.toLocaleString()}▪`, "🏆");
   sd();
   toast(`🏆 ${auc.pname} → ${winner.club.replace("FC ", "")} — ${winner.amount.toLocaleString()}▪`, "success");
   renderTransferPage(); rTable(); rStats();
@@ -1585,6 +1717,7 @@ function approveSugg(id) {
       if (BL.length > 60) BL.length = 60;
       const signingPres = USERS.find((u) => u.role === "president" && u.club === s.data.toClub);
       if (signingPres) checkAndAwardAchievement(signingPres.un, "first_buy");
+      logActivity("sign", `${p.ten} ký HĐ tự do → ${s.data.toClub.replace("FC ", "")} (${s.data.seasons} mùa)`, "🖊️");
       sd();
       toast(`Đã duyệt ký hợp đồng ${p.ten} → ${s.data.toClub.replace("FC ", "")}`, "success");
     }
@@ -1608,6 +1741,7 @@ function approveSugg(id) {
         BL.unshift({ t: new Date().toLocaleString("vi-VN"), pl: p.ten, bn: `Chuyển nhượng ${from} → ${to} +${offer}▪`, by: CU.un });
         const buyerPresident = USERS.find((u) => u.role === "president" && u.club === to);
         if (buyerPresident) checkAndAwardAchievement(buyerPresident.un, "first_buy");
+        logActivity("transfer", `${p.ten}: ${from.replace("FC ", "")} → ${to.replace("FC ", "")} · ${offer.toLocaleString()}▪`, "🤝");
         sd();
         toast(`Đã duyệt chuyển nhượng ${p.ten}`, "success");
       }
@@ -2087,6 +2221,7 @@ function finishTournament() {
   if (BL.length > 60) BL.length = 60;
   HALL_OF_FAME.unshift({ tournamentId: tournament.id, name: tournament.name, type: tournament.type || "league", season: tournament.season, winner: winningTeam, prize, date: new Date().toLocaleDateString("vi-VN") });
   if (HALL_OF_FAME.length > 30) HALL_OF_FAME.length = 30;
+  logActivity("tournament_end", `${winningTeam.replace("FC ", "")} vô địch ${tournament.name} · thưởng ${prize.toLocaleString()}▪`, "🏆");
   const winPresident = USERS.find((u) => u.role === "president" && u.club === winningTeam);
   if (winPresident) {
     checkAndAwardAchievement(winPresident.un, "champ");
@@ -2106,6 +2241,7 @@ function addTournament() {
   const end = document.getElementById("pageTEnd")?.value || document.getElementById("tEnd")?.value || "";
   const prize = parseInt(document.getElementById("pageTPrize")?.value || document.getElementById("tPrize")?.value || "0", 10) || 0;
   const type = document.getElementById("pageTType")?.value || "league";
+  const autoSchedule = document.getElementById("pageTAutoSchedule")?.checked && type === "league";
   if (!name) {
     toast("Nhập tên giải", "warn");
     return;
@@ -2115,7 +2251,10 @@ function addTournament() {
     return;
   }
   const id = `t_${Date.now()}`;
-  TOURNAMENTS.unshift({ id, name, season, start, end, prize, type, createdBy: CU?.un || "Super Admin", createdAt: new Date().toLocaleString("vi-VN") });
+  const newT = { id, name, season, start, end, prize, type, createdBy: CU?.un || "Super Admin", createdAt: new Date().toLocaleString("vi-VN") };
+  if (autoSchedule) newT.matches = generateRoundRobinMatches(start);
+  TOURNAMENTS.unshift(newT);
+  logActivity("tournament_created", `Tạo giải "${name}" ${season ? `(${season})` : ""} — ${type === "cup" ? "Cúp" : "League"}`, "🗓️");
   sd();
   if (document.getElementById("tName")) document.getElementById("tName").value = "";
   if (document.getElementById("tSeason")) document.getElementById("tSeason").value = "";
@@ -2416,6 +2555,11 @@ Object.assign(window, {
   signFreeAgent,
   updateNavBadges,
   renderFreeAgents,
+  logActivity,
+  renderActivityFeed,
+  autoFinalizeExpiredAuctions,
+  setupRealtimeListeners,
+  generateRoundRobinMatches,
   requestPurchase,
   submitPurchaseRequest,
   renderTransferPage,
